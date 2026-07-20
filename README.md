@@ -1,8 +1,26 @@
-# Explainable Transformer-Based Graph Neural Network for Predicting Antimalarial Drug Efficacy from Molecular Structure
+# Transformer-Based GNN Model for Active Antimalarial Drug Prediction
 
+Graph neural network pipeline for predicting antimalarial activity from
+molecular structure (SMILES), comparing four GNN architectures (GCN,
+GAT, GCN-Transformer, GAT-Transformer) against five classical
+baselines, with full explainability support (GNNExplainer, Integrated
+Gradients, Feature Ablation, Saliency, SHAP) across both the atomic
+graph and molecular descriptor branches.
 
-ABSTRACT
+## Usage
 
-Malaria remains a persistent global health threat, with the emergence of drug-resistant Plasmodium strains intensifying the urgency for novel therapeutic interventions. Despite advances in computational drug discovery, many predictive models lack transparency, limiting their utility in guiding rational antimalarial design. In this study, we present an interpretable deep learning framework based on a Transformer-enhanced Graph Neural Network (GNN) for the prediction of antimalarial activity directly from SMILES representations. Leveraging a curated dataset from ChEMBL, we benchmarked three architectures—standard GNN, GAT-Transformer hybrid, and Transformer-based GNN—demonstrating that the Transformer-based model outperforms its counterparts with an AUC-ROC of 0.947 and a training-validation accuracy of 88.70%. To address the critical challenge of model interpretability, we integrated SHAP and Captum-based techniques, including feature ablation, saliency mapping, and integrated gradients. These methods revealed that atomic-level features such as hydrogen count, aromaticity, and implicit valence, along with molecular descriptors like PEOE_VSA1 and EState_VSA, were key drivers of model predictions. Notably, pharmacophore-relevant fragments such as aromatic amines, thiazoles, and thiophenes were also identified as influential, aligning with known antimalarial scaffolds. This study not only establishes the Transformer-based GNN as a state-of-the-art predictive model for antimalarial activity but also pioneers a transparent, explainable AI framework that bridges computational predictions with chemical intuition—offering valuable insights for accelerating antimalarial drug discovery.
+```bash
+python run.py cv              # cross-validate all models
+python run.py train-final     # 80/20 split, tune, train, save
+python run.py compare         # generate comparison plots
+python run.py explain         # run all explainability methods
+python run.py all             # run everything in sequence
+```
 
-Keywords: malaria, graph neural network, transformer, Plasmodium falciparum, machine learning, deep learning, drug discovery, explainability
+See `run_pipeline.ipynb` for the notebook version.
+
+## Setup
+
+```bash
+pip install -r requirements.txt
+```
