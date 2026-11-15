@@ -1,214 +1,126 @@
+"""Stage 1 (prepare): clean the data, load your graphs and descriptors, build the scaffold splits and cache everything."""
 import os
+import pickle
+import time
+from functools import partial
+from multiprocessing import Pool
 
 import numpy as np
 import pandas as pd
-from rdkit import Chem
-from sklearn.model_selection import train_test_split, StratifiedKFold
-from sklearn.preprocessing import StandardScaler
-from imblearn.under_sampling import RandomUnderSampler
+import torch
+from rdkit.Chem import Descriptors
+from torch_geometric.data import Data
 
-from descriptors import compute_descriptors
-
-# common drug-likeness descriptors -- preferred when choosing between
-# two correlated features
-PRIORITY_DESCRIPTORS = [
-    'MolWt', 'LogP', 'NumHDonors', 'NumHAcceptors', 'TPSA', 'NumRotatableBonds',
-    'NumAromaticRings', 'HeavyAtomCount', 'LogS', 'FractionCsp3', 'NumHBA', 'NumHBD',
-    'RingCount', 'NumHeteroatoms', 'BalabanJ', 'BertzCT', 'Chi0', 'Chi1', 'LabuteASA',
-]
+from config import CFG, logged, path, save_run_info
+from graphs import featurise, load_graph_file
+from splits import group_by_scaffold, scaffold_holdout, scaffold_kfold
 
 
-def load_and_clean(path):
-    df = pd.read_csv(path)
-    df = df.dropna(subset=['Labels']).copy()
-    df['Labels'] = df['Labels'].astype(int)
-
-    def parses(smiles):
-        return isinstance(smiles, str) and Chem.MolFromSmiles(smiles) is not None
-
-    df = df[df['Smiles'].apply(parses)]
+@logged
+def prepare():
+    save_run_info()
+    t0 = time.time()
+    df = pd.read_csv(CFG["data_path"])
+    sc, lc = CFG["smiles_col"], CFG["label_col"]
+    df = df.dropna(subset=[lc]).copy()
+    df[lc] = df[lc].astype(int)
+    n_raw = len(df)
     df = df.drop_duplicates().reset_index(drop=True)
+    print(f"{n_raw} labelled rows, {len(df)} after removing exact duplicate rows")
+    if CFG.get("limit"):
+        df = df.sample(n=min(CFG["limit"], len(df)), random_state=CFG["seed"]).reset_index(drop=True)
+    own_graphs = load_graph_file(CFG["graph_path"]) if CFG.get("graph_path") else None
+    ext = None
+    if CFG.get("desc_path"):                                   # your own descriptor table (SMILES + numeric columns)
+        ext = pd.read_csv(CFG["desc_path"]).drop_duplicates(subset=sc).set_index(sc)
+        ext_cols = [c for c in ext.columns if c != lc and pd.api.types.is_numeric_dtype(ext[c])
+                    and not str(c).startswith("Unnamed")]
+        print(f"using your descriptor file: {len(ext_cols)} numeric columns")
+    with Pool(max(1, (os.cpu_count() or 2) - 1)) as pool:
+        feats = pool.map(partial(featurise, graph=own_graphs is None, desc=ext is None),
+                         df[sc].tolist(), chunksize=256)
+    valid = np.array([f is not None for f in feats])
+    if own_graphs is not None:
+        missing = np.array([smi not in own_graphs for smi in df[sc]])
+        if CFG.get("build_missing") and missing.any():
+            print(f"building {int(missing.sum())} graphs missing from your graph file")
+            extra = [featurise(smi, graph=True, desc=False) if m else None for smi, m in zip(df[sc], missing)]
+            for i, e in enumerate(extra):
+                if e is not None:
+                    feats[i] = (e[0], e[1], e[2], feats[i][3] if feats[i] else e[3], feats[i][4] if feats[i] else None)
+            missing = np.zeros(len(df), bool)
+        print(f"{int(missing.sum())} molecules have no graph in your file and are dropped")
+        valid &= ~missing
+    if ext is not None:
+        absent = ~df[sc].isin(ext.index).to_numpy()
+        print(f"{int(absent.sum())} molecules have no row in your descriptor file and are dropped")
+        valid &= ~absent
+    df = df[valid].reset_index(drop=True)
+    feats = [f for f, v in zip(feats, valid) if v]
+    y = df[lc].to_numpy()
+    scaffolds = [f[3] for f in feats]
+    gx, gei, gea = [], [], []
+    for smi, f in zip(df[sc], feats):
+        if own_graphs is not None and smi in own_graphs:       # your graph, used exactly as it is
+            g = own_graphs[smi]
+            ea_ = g.edge_attr.numpy() if getattr(g, "edge_attr", None) is not None else np.zeros((g.edge_index.shape[1], 5))
+            gx.append(g.x.numpy().astype(np.float32))
+            gei.append(g.edge_index.numpy().astype(np.int64))
+            gea.append(ea_.astype(np.float32).reshape(-1, 5))
+        else:                                                  # built here (no own file, or --build-missing)
+            gx.append(f[0]); gei.append(f[1]); gea.append(f[2])
+    if ext is not None:
+        desc_all, desc_names = ext.loc[df[sc], ext_cols].to_numpy(dtype=np.float64), np.array(ext_cols)
+    else:
+        desc_all, desc_names = np.stack([f[4] for f in feats]), np.array([n for n, _ in Descriptors.descList])
+    conflict = df.groupby(sc)[lc].nunique()
+    print(f"{len(df)} valid molecules ({y.sum()} active, {len(y) - y.sum()} inactive, {100 * y.mean():.1f}% active)")
+    print(f"SMILES with conflicting labels: {(conflict > 1).sum()}")
 
-    n_active = (df['Labels'] == 1).sum()
-    print(f"{len(df)} compounds after cleaning ({n_active} active, {len(df) - n_active} inactive)")
-    return df
-
-
-def select_non_redundant_features(train_df, descriptor_names, threshold=0.85):
-    # operates on train_df only -- passing the full dataset here
-    # reintroduces the leak this was built to avoid
-    desc = train_df[descriptor_names].copy()
-    desc = desc.replace([np.inf, -np.inf], np.nan)  # inf inflates var(), masking a broken descriptor as informative
-    desc = desc[desc.columns[desc.isnull().mean() <= 0.5]]
-    desc = desc[desc.columns[desc.var() > 1e-10]]
-    desc = desc.fillna(desc.median())
-
-    corr = desc.corr().fillna(0)
-    selected = []
-
-    def is_redundant(feature):
-        for kept in selected:
-            if abs(corr.loc[feature, kept]) >= threshold:
-                return True
-        return False
-
-    for feat in PRIORITY_DESCRIPTORS:
-        if feat in desc.columns and not is_redundant(feat):
-            selected.append(feat)
-
-    for feat in desc.columns:
-        if feat not in selected and not is_redundant(feat):
-            selected.append(feat)
-
-    print(f"kept {len(selected)}/{len(descriptor_names)} descriptors (train split only, r >= {threshold} dropped)")
-    return selected
-
-
-def _sanitize(df, cols):
-    """Replaces inf/-inf with NaN, then fills missing values with 0.
-    StandardScaler cannot handle infinities, which some RDKit
-    descriptors (notably Ipc) produce on large or complex molecules."""
-    return df[cols].replace([np.inf, -np.inf], np.nan).fillna(0)
-
-
-def balance_classes(df, seed):
-    X, y = df.drop(columns=['Labels']), df['Labels']
-    X_res, y_res = RandomUnderSampler(random_state=seed).fit_resample(X, y)
-    return pd.concat([X_res, y_res], axis=1)
-
-
-def prepare_split(train_df, val_df, test_df, seed, correlation_threshold=0.85):
-    all_cols = [c for c in train_df.columns if c not in ('Smiles', 'Labels')]
-    descriptor_cols = select_non_redundant_features(train_df, all_cols, correlation_threshold)
-
-    cols = ['Smiles', 'Labels'] + descriptor_cols
-    train_df, val_df, test_df = train_df[cols].copy(), val_df[cols].copy(), test_df[cols].copy()
-    train_df = balance_classes(train_df, seed)
-
-    scaler = StandardScaler()
-    train_df[descriptor_cols] = scaler.fit_transform(_sanitize(train_df, descriptor_cols))
-    val_df[descriptor_cols] = scaler.transform(_sanitize(val_df, descriptor_cols))
-    test_df[descriptor_cols] = scaler.transform(_sanitize(test_df, descriptor_cols))
-
-    return train_df, val_df, test_df, descriptor_cols, scaler
-
-
-def prepare_two_way_split(train_df, test_df, seed, correlation_threshold=0.85):
-    """Same as prepare_split without a validation set, since the
-    classical baselines fit in one call and need no early-stopping
-    split."""
-    all_cols = [c for c in train_df.columns if c not in ('Smiles', 'Labels')]
-    descriptor_cols = select_non_redundant_features(train_df, all_cols, correlation_threshold)
-
-    cols = ['Smiles', 'Labels'] + descriptor_cols
-    train_df, test_df = train_df[cols].copy(), test_df[cols].copy()
-    train_df = balance_classes(train_df, seed)
-
-    scaler = StandardScaler()
-    train_df[descriptor_cols] = scaler.fit_transform(_sanitize(train_df, descriptor_cols))
-    test_df[descriptor_cols] = scaler.transform(_sanitize(test_df, descriptor_cols))
-
-    return train_df, test_df, descriptor_cols, scaler
-
-
-def save_balanced_dataset(input_path, output_path, seed=42):
-    """Balances the entire dataset once, by undersampling the majority
-    class to match the minority count, and saves the result as a new
-    Smiles/Labels CSV at output_path.
-
-    Point config.toml's [data] path at output_path (with new cache
-    filenames, since the existing caches are keyed to the original
-    data) to have every downstream split -- cv, train-final,
-    baselines -- drawn from this balanced source. Test-set metrics
-    then describe performance under an artificial 50/50 class balance
-    rather than the true distribution; this should be stated
-    explicitly if reported."""
-    df = load_and_clean(input_path)
-
-    n_active = (df['Labels'] == 1).sum()
-    n_inactive = (df['Labels'] == 0).sum()
-    n = min(n_active, n_inactive)
-
-    if n == 0:
-        raise ValueError("one class has zero compounds after cleaning, can't balance")
-
-    active_df = df[df['Labels'] == 1].sample(n=n, random_state=seed)
-    inactive_df = df[df['Labels'] == 0].sample(n=n, random_state=seed)
-    balanced_df = pd.concat([active_df, inactive_df]).sample(frac=1, random_state=seed).reset_index(drop=True)
-
-    balanced_df[['Smiles', 'Labels']].to_csv(output_path, index=False)
-    print(f"balanced dataset: {len(balanced_df)} compounds ({n} active, {n} inactive) "
-          f"— dropped {len(df) - len(balanced_df)} excess majority-class compounds")
-    print(f"saved to {output_path}")
-    return balanced_df
-
-
-def outer_split(df, test_size=0.2, seed=42):
-    """80/20 outer split. outer_test_df is set aside here and used only
-    for the final evaluation, never during tuning or training."""
-    outer_train_df, outer_test_df = train_test_split(
-        df, test_size=test_size, stratify=df['Labels'], random_state=seed
+    groups = group_by_scaffold(scaffolds, range(len(df)))
+    dev_idx, test_idx = scaffold_holdout(groups, CFG["test_frac"], CFG["seed"])
+    dev_groups = group_by_scaffold(scaffolds, dev_idx.tolist())
+    folds_val = scaffold_kfold(dev_groups, CFG["n_folds"], CFG["seed"])
+    cv = [(np.setdiff1d(dev_idx, v), v) for v in folds_val]
+    inner_train, inner_val = scaffold_holdout(dev_groups, CFG["inner_val_frac"], CFG["seed"])
+    shared = set(np.array(scaffolds, dtype=object)[test_idx]) & set(np.array(scaffolds, dtype=object)[dev_idx])
+    assert not shared, "scaffold overlap between development and test sets"
+    prepared = dict(
+        smiles=df[sc].tolist(), y=y, scaffolds=scaffolds, desc=desc_all,
+        desc_names=desc_names, x=gx, ei=gei, ea=gea,
+        dev_idx=dev_idx, test_idx=test_idx, cv=cv, inner_train=inner_train, inner_val=inner_val,
     )
-    return outer_train_df.reset_index(drop=True), outer_test_df.reset_index(drop=True)
+    with open(path("cache", "prepared.pkl"), "wb") as f:
+        pickle.dump(prepared, f, protocol=4)
+    split = np.full(len(y), "development", dtype=object)       # one row per compound: which part it belongs to
+    split[test_idx] = "test"
+    fold_of = np.full(len(y), -1)
+    for k, (_, v) in enumerate(cv):
+        fold_of[v] = k
+    inner = np.full(len(y), "", dtype=object)
+    inner[inner_train], inner[inner_val] = "inner_train", "inner_val"
+    pd.DataFrame(dict(smiles=df[sc], label=y, scaffold=scaffolds, split=split, cv_fold=fold_of,
+                      final_fit_part=inner)).to_csv(path("splits.csv"), index=False)
+    rows = []
+    for name, idx in [("Full dataset", np.arange(len(y))), ("Development set", dev_idx), ("Test set", test_idx)]:
+        rows.append(dict(subset=name, compounds=len(idx), active=int(y[idx].sum()),
+                         inactive=int(len(idx) - y[idx].sum()), active_pct=round(100 * y[idx].mean(), 2)))
+    pd.DataFrame(rows).to_csv(path("dataset_summary.csv"), index=False)
+    print(pd.DataFrame(rows).to_string(index=False))
+    print(f"{len(desc_names)} descriptors; prepare took {time.time() - t0:.0f}s")
 
 
-def make_holdout_split(df, seed, test_size=0.15, val_size=0.15):
-    """Single quick split for development use. Not intended as a
-    reported result -- see cross_validation_splits for that."""
-    rest_size = test_size + val_size
-    train_df, rest_df = train_test_split(df, test_size=rest_size, stratify=df['Labels'], random_state=seed)
-    val_df, test_df = train_test_split(
-        rest_df, test_size=test_size / rest_size, stratify=rest_df['Labels'], random_state=seed
-    )
-    return prepare_split(train_df, val_df, test_df, seed)
+def load_prepared():
+    """The cached data as a plain dict (no graph objects built): smiles, y, scaffolds, desc, desc_names, splits."""
+    with open(path("cache", "prepared.pkl"), "rb") as f:
+        return pickle.load(f)
 
 
-def cross_validation_splits(df, n_folds=5, seed=42):
-    """Stratified k-fold; each fold performs its own feature selection,
-    scaling, and undersampling on its training rows only. The
-    validation fold serves as the test set for that fold -- report
-    mean +/- std across folds, not a single fold's value."""
-    skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=seed)
+class Ctx:
+    """Loads the cached data once and builds the graph objects."""
 
-    for fold_idx, (train_idx, val_idx) in enumerate(skf.split(df, df['Labels'])):
-        train_df = df.iloc[train_idx].reset_index(drop=True)
-        val_df = df.iloc[val_idx].reset_index(drop=True)
-
-        all_cols = [c for c in df.columns if c not in ('Smiles', 'Labels')]
-        descriptor_cols = select_non_redundant_features(train_df, all_cols)
-
-        cols = ['Smiles', 'Labels'] + descriptor_cols
-        train_df, val_df = train_df[cols].copy(), val_df[cols].copy()
-        train_df = balance_classes(train_df, seed)
-
-        scaler = StandardScaler()
-        train_df[descriptor_cols] = scaler.fit_transform(_sanitize(train_df, descriptor_cols))
-        val_df[descriptor_cols] = scaler.transform(_sanitize(val_df, descriptor_cols))
-
-        yield fold_idx, train_df, val_df, descriptor_cols, scaler
-
-
-def build_full_dataset(raw_path, cache_path='enhanced_drug_data_with_descriptors.csv',
-                        use_cache=True, force_recompute=False):
-    """Descriptor calculation is the slow step for a large dataset
-    (100k+ compounds x 104 descriptors), so results are cached to
-    cache_path and reloaded on later runs.
-
-    Set force_recompute=True, or delete cache_path, if the source data
-    has changed -- the cache does not detect this automatically."""
-    if use_cache and not force_recompute and os.path.exists(cache_path):
-        print(f"loading cached descriptors from {cache_path} (pass force_recompute=True, "
-              f"or delete this file, to rebuild from {raw_path})")
-        df = pd.read_csv(cache_path)
-        n_active = (df['Labels'] == 1).sum()
-        print(f"{len(df)} compounds loaded ({n_active} active, {len(df) - n_active} inactive)")
-        return df
-
-    df = load_and_clean(raw_path)
-    df = compute_descriptors(df)
-
-    if use_cache:
-        df.to_csv(cache_path, index=False)
-        print(f"cached computed descriptors to {cache_path} for next time")
-
-    return df
+    def __init__(self):
+        self.__dict__.update(load_prepared())
+        self.graphs = [Data(x=torch.from_numpy(self.x[i]), edge_index=torch.from_numpy(self.ei[i]),
+                            edge_attr=torch.from_numpy(self.ea[i]), y=torch.tensor([int(self.y[i])]),
+                            idx=torch.tensor([i])) for i in range(len(self.y))]

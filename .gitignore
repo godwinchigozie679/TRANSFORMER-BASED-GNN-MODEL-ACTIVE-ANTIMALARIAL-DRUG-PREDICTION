@@ -1,0 +1,6 @@
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
+*.pt
+cache/
+main_data_2/enhanced_drug_data_with_descriptors.csv

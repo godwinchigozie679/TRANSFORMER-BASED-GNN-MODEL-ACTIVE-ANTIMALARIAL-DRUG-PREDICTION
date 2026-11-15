@@ -1,26 +1,65 @@
-# Transformer-Based GNN Model for Active Antimalarial Drug Prediction
+# Antimalarial activity prediction: complete pipeline
 
-Graph neural network pipeline for predicting antimalarial activity from
-molecular structure (SMILES), comparing four GNN architectures (GCN,
-GAT, GCN-Transformer, GAT-Transformer) against five classical
-baselines, with full explainability support (GNNExplainer, Integrated
-Gradients, Feature Ablation, Saliency, SHAP) across both the atomic
-graph and molecular descriptor branches.
+Everything sits in ONE folder: the `.py` files, the notebook, and `main_data_2/` with your three data files
+(`Drug_activity.csv` with columns `Smiles`, `Labels`; `molecule_graphs.pt`; `enhanced_drug_data_with_descriptors.csv`).
 
-## Usage
+## Where things are saved (all in folders, nothing loose)
+| Folder | Content |
+|---|---|
+| `cache/` | prepared data (graphs, splits) so later stages start fast |
+| `eda/` | data visualisation before training: class_balance, descriptor_distributions, correlation_heatmap, sample_molecules, extreme_molecules (PNG), `data_split_overview.pdf`, `descriptor_statistics.csv` (Mann-Whitney, FDR), `dataset_summary.csv`, `splits.csv` |
+| `tuning/` | `<model>_tuning_results.csv`, `tuning_runs.csv`, `hyperparameter_table.csv`, `best_params.json` |
+| `cross_validation/` | `cv_folds.csv`, `cv_mean_std_table.csv` |
+| `trained_models/` | weights for every model and seed (`<kind>_seed<N>.pt`, plus `gnn_model.pt`, `gat_model.pt`, `gcn_transformer_model.pt`, `gat_transformer_model.pt` for the first seed) and `<name>_best_params.json` |
+| `training_history/` | per-epoch loss, AUC, accuracy, learning rate for every final model and seed (`*_history.pkl`, `*_seed<N>_history.csv`) |
+| `test_results/` | `<model>_results.pkl`, `test_predictions.csv`, `test_set_metrics_table.csv`, `bootstrap_ci_table.csv`, `delong_pairwise.csv`, `seed_repeat_table.csv`, `seeds/` |
+| `learning_curves/` | `learning_curve_folds.csv`, `learning_curve_summary.csv` |
+| `explainability/` | all explainability CSVs, agreement and deletion-check tables |
+| `figures/` | confusion_matrices, roc_curves, pr_curves, training_curves, tuning_results, metrics_comparison, learning_curves, prauc_ci, delong_heatmap, explainability figures |
+| `logs/` | `training_log.txt`, `run_log.csv`, `run_info.json` |
 
-```bash
-python run.py cv              # cross-validate all models
-python run.py train-final     # 80/20 split, tune, train, save
-python run.py compare         # generate comparison plots
-python run.py explain         # run all explainability methods
-python run.py all             # run everything in sequence
-```
+## Accuracy settings (config.CFG, all on by default)
+* `QUICK = False` is the default; `QUICK = True` (or `--quick`) writes to `quick_test/` so it never mixes with real results.
+* `resample_each_epoch`: a fresh 1:1 undersample of the training pool every epoch (uses all inactives over training, test set untouched).
+* `embed_categorical`: learned embeddings for atomic number, hybridisation, period and group instead of raw numbers.
+* AdamW with gradient clipping; longer tuning budget and patience.
+* `ensemble`: the reported GNN result is the mean probability over the training seeds (`--seeds 42 43 44`). Baselines are single models. State this in Methods.
+* Probabilities from 1:1 undersampled training are shifted upward, so precision/F1/MCC at cutoff 0.5 can look low; the "(val-tuned cutoff)" rows use a cutoff chosen on validation data only and are the fairer threshold metrics. AUROC/PR-AUC are unaffected.
+* Never tune anything on the test set.
 
-See `run_pipeline.ipynb` for the notebook version.
+## Explainability (same as the original analysis)
+Five methods (GNNExplainer, Integrated Gradients, Feature Ablation, Saliency, SHAP), each on both branches
+(atomic graph features and molecular descriptors). In the notebook: first the **saved models are loaded** from
+`trained_models/` (no retraining), then each method runs in its own cell:
+`explain.load_trained_models()` -> `explain.make_setup(...)` -> `run_gnnexplainer`, `run_integrated_gradients`,
+`run_feature_ablation`, `run_saliency`, `run_shap` -> `run_agreement` (rank agreement between the methods) ->
+`run_deletion_check`. CSV names are the original ones (`saliency_importance.csv`, `descriptor_saliency_importance.csv`, ...)
+and the figures are `figures/<method>_atomic_vs_molecular.pdf`.
+The explanations are post-hoc hypotheses about what the model uses; they are not validated experimentally.
 
-## Setup
+## Files
+| File | What it holds |
+|---|---|
+| `config.py` | settings, hyperparameter grid, folder layout, quick-test mode, log file / run info |
+| `eda.py` | stage 2b `eda` (data visualisation before training) |
+| `graphs.py` | atom/bond features and names, scaffolds, RDKit descriptors, loading your graph file |
+| `splits.py` | scaffold splits, 1:1 undersampling (training data only) |
+| `data_prep.py` | stage 1 `prepare()` |
+| `descriptors.py` | descriptor imputation/filter/standardisation (fit on training data only) |
+| `models.py` | GCN, GAT, GCN-Transformer, GAT-Transformer with shared classifier head |
+| `train.py` | train one model (records per-epoch history), predict, metrics, baselines |
+| `tune.py` | stage 2 `tune()` |
+| `train_final.py` | stage 3 `final()` |
+| `evaluate.py` | stage 4 `report()` |
+| `curves.py` | stage 5 `curves()` (learning curves, 5-fold CV, all nine models) |
+| `plots.py` | stage 6 `plots()` (figures, original publication style) |
+| `explain.py` | stage 7: the five explainability methods, agreement, deletion check |
+| `run.py` | command line |
+| `make_table.py`, `make_cv_table.py` | LaTeX tables from `test_results/` and `cross_validation/` CSVs (write `test_results/table_*.tex`) |
 
-```bash
-pip install -r requirements.txt
-```
+## Run
+Notebook: set `QUICK = True`, run all cells (smoke test), then `QUICK = False` and run again (GPU recommended).
+Terminal: `python run.py all --data main_data_2/Drug_activity.csv --graphs main_data_2/molecule_graphs.pt --descriptors main_data_2/enhanced_drug_data_with_descriptors.csv --out . --seeds 42 43 44`
+
+Training AUC/accuracy in `training_history` are running values over each epoch's training batches (dropout on);
+validation values use the validation set.

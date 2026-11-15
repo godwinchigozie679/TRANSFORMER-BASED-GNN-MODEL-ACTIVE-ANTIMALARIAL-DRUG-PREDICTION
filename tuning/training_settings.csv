@@ -1,0 +1,111 @@
+section,setting,value
+Data split,Outer scaffold split: test fraction,0.2
+Data split,Inner validation fraction (final fit),0.15
+Data split,Scaffold CV folds,5
+Data split,Random seed (split),42
+Data split,Descriptor correlation threshold,0.85
+Data split,Undersampling,"1:1 on training data only, redrawn every epoch"
+Training,Optimiser,AdamW
+Training,LR scheduler,"ReduceLROnPlateau (mode=max on validation AUROC, factor 0.5, patience 5)"
+Training,Batch size (train),128
+Training,Batch size (evaluation),2048
+Training,Gradient clipping (max norm),5.0
+Training,Attention heads (GAT/Transformer),8
+Training,Categorical atom embeddings,True
+Training,Mixed precision,False
+Training,Final training: max epochs,200
+Training,Final training: early-stopping patience (val AUROC),30
+Training,Final training seeds,"[42, 43, 44]"
+Training,Reported predictions,mean over seeds (ensemble)
+Tuning,Search type,random search + successive halving
+Tuning,Configurations sampled (per GNN),20
+Tuning,Screen: epochs on fold 1,20
+Tuning,Configurations kept for all folds,5
+Tuning,CV: max epochs / patience,50 / 10
+Search space,hidden,"[64, 128, 256]"
+Search space,dropout,"[0.1, 0.2, 0.3]"
+Search space,layers,"[2, 3, 4]"
+Search space,lr,"[0.001, 0.0005, 0.0001]"
+Search space,weight_decay,"[1e-05, 0.0001, 0.0005]"
+Search space,pool,"['mean', 'mean_max']"
+Evaluation,Bootstrap resamples,1000
+Explainability,Compounds explained,50
+Explainability,Integrated Gradients steps,50
+Explainability,SHAP nsamples,auto
+Software,Device,cpu
+Software,torch,2.2.0
+Software,torch_geometric,2.6.1
+Software,rdkit,2022.09.5
+Software,sklearn,1.6.1
+Software,numpy,1.26.4
+Software,pandas,2.3.3
+Selected: GCN,hidden,256
+Selected: GCN,dropout,0.1
+Selected: GCN,layers,4
+Selected: GCN,lr,0.0001
+Selected: GCN,weight_decay,0.0005
+Selected: GCN,pool,mean_max
+Selected: GAT,hidden,256
+Selected: GAT,dropout,0.3
+Selected: GAT,layers,3
+Selected: GAT,lr,0.0005
+Selected: GAT,weight_decay,1e-05
+Selected: GAT,pool,mean
+Selected: GCN-Transformer,hidden,256
+Selected: GCN-Transformer,dropout,0.1
+Selected: GCN-Transformer,layers,4
+Selected: GCN-Transformer,lr,0.0001
+Selected: GCN-Transformer,weight_decay,0.0005
+Selected: GCN-Transformer,pool,mean_max
+Selected: GAT-Transformer,hidden,256
+Selected: GAT-Transformer,dropout,0.3
+Selected: GAT-Transformer,layers,3
+Selected: GAT-Transformer,lr,0.0005
+Selected: GAT-Transformer,weight_decay,1e-05
+Selected: GAT-Transformer,pool,mean
+Epochs: GAT,"Epochs run (mean, min-max)",55 (52-59)
+Epochs: GAT,"Best epoch (mean, min-max)",25 (22-29)
+Epochs: GAT,Runs stopped early,3 of 3
+Epochs: GAT-Transformer,"Epochs run (mean, min-max)",62 (44-72)
+Epochs: GAT-Transformer,"Best epoch (mean, min-max)",32 (14-42)
+Epochs: GAT-Transformer,Runs stopped early,3 of 3
+Epochs: GCN,"Epochs run (mean, min-max)",58 (50-64)
+Epochs: GCN,"Best epoch (mean, min-max)",28 (20-34)
+Epochs: GCN,Runs stopped early,3 of 3
+Epochs: GCN-Transformer,"Epochs run (mean, min-max)",51 (50-54)
+Epochs: GCN-Transformer,"Best epoch (mean, min-max)",21 (20-24)
+Epochs: GCN-Transformer,Runs stopped early,3 of 3
+Model size: GCN,Trainable parameters (approx.),"489,485"
+Model size: GCN,Molecular descriptors kept,159
+Model size: GAT,Trainable parameters (approx.),"358,668"
+Model size: GAT,Molecular descriptors kept,159
+Model size: GCN-Transformer,Trainable parameters (approx.),"950,537"
+Model size: GCN-Transformer,Molecular descriptors kept,159
+Model size: GAT-Transformer,Trainable parameters (approx.),"624,137"
+Model size: GAT-Transformer,Molecular descriptors kept,159
+Baseline: Random Forest,n_estimators,100
+Baseline: Random Forest,max_depth,None (library default)
+Baseline: Random Forest,min_samples_split,2
+Baseline: Random Forest,min_samples_leaf,1
+Baseline: Random Forest,max_features,sqrt
+Baseline: Random Forest,class_weight,None (library default)
+Baseline: Random Forest,random_state,42
+Baseline: Gradient Boosting,learning_rate,0.1
+Baseline: Gradient Boosting,max_iter,100
+Baseline: Gradient Boosting,max_depth,None (library default)
+Baseline: Gradient Boosting,max_leaf_nodes,31
+Baseline: Gradient Boosting,l2_regularization,0.0
+Baseline: Gradient Boosting,early_stopping,auto
+Baseline: Gradient Boosting,random_state,42
+Baseline: Logistic Regression,penalty,l2
+Baseline: Logistic Regression,C,1.0
+Baseline: Logistic Regression,solver,lbfgs
+Baseline: Logistic Regression,max_iter,2000
+Baseline: Logistic Regression,class_weight,None (library default)
+Baseline: Linear SVM,method,sigmoid
+Baseline: Linear SVM,cv,3
+Baseline: k-NN,n_neighbors,15
+Baseline: k-NN,weights,uniform
+Baseline: k-NN,metric,minkowski
+Baseline: Linear SVM,LinearSVC: C / loss / max_iter,1.0 / squared_hinge / 5000
+Baseline: all,Tuning,"none (library defaults, listed above); trained on the same 1:1 undersampled training data"

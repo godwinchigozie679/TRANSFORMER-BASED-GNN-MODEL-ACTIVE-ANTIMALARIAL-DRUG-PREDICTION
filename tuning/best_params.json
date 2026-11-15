@@ -1,0 +1,46 @@
+{
+  "gcn": {
+    "cfg_id": 8,
+    "mean_val_auc": 0.9429275157381684,
+    "std_val_auc": 0.0028470602519802485,
+    "hidden": 256,
+    "dropout": 0.1,
+    "layers": 4,
+    "lr": 0.0001,
+    "weight_decay": 0.0005,
+    "pool": "mean_max"
+  },
+  "gat": {
+    "cfg_id": 11,
+    "mean_val_auc": 0.9425605864257239,
+    "std_val_auc": 0.0026504227221361026,
+    "hidden": 256,
+    "dropout": 0.3,
+    "layers": 3,
+    "lr": 0.0005,
+    "weight_decay": 1e-05,
+    "pool": "mean"
+  },
+  "gcn_transformer": {
+    "cfg_id": 8,
+    "mean_val_auc": 0.943468388714009,
+    "std_val_auc": 0.00280607913181682,
+    "hidden": 256,
+    "dropout": 0.1,
+    "layers": 4,
+    "lr": 0.0001,
+    "weight_decay": 0.0005,
+    "pool": "mean_max"
+  },
+  "gat_transformer": {
+    "cfg_id": 11,
+    "mean_val_auc": 0.9433707244215066,
+    "std_val_auc": 0.002804809930015969,
+    "hidden": 256,
+    "dropout": 0.3,
+    "layers": 3,
+    "lr": 0.0005,
+    "weight_decay": 1e-05,
+    "pool": "mean"
+  }
+}

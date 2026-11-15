@@ -1,0 +1,28 @@
+feature,importance
+Num Radical Electrons,0.16432053
+Is Metal,0.028455645
+Formal Charge,0.015746936
+In 3-member Ring,0.006968909
+In 4-member Ring,0.0045928783
+In 8-member Ring,0.004314614
+Is Chiral,0.0040678107
+In 7-member Ring,0.003688181
+Is Halogen,0.0033799917
+Period,0.00316296
+Num Explicit Hs,0.0025188723
+In 5-member Ring,0.0020995326
+Is Aromatic,0.0011504279
+Is In Ring,0.0010648895
+Num Rings,0.00096633215
+In 6-member Ring,0.00089734315
+Is Heteroatom,0.0006937935
+Hybridization,0.000643397
+Num Neighbors,0.00063287833
+Total Degree,0.0005572632
+Implicit Valence,0.00048826673
+Total H Count,0.0004775116
+Degree,0.000465443
+Num Implicit Hs,0.00045463722
+Group,0.00044057076
+Sum Bond Orders,0.0003475507
+Atomic Number,0.00019920751

@@ -1,148 +1,205 @@
+"""Settings shared by every stage: paths, hyperparameter grid, model names, device, quick-test mode."""
+import functools
+import json
 import os
-import random
+import sys
+import time
+from datetime import datetime
 
-import numpy as np
 import torch
 
-try:
-    import tomllib  # stdlib 3.11+
-except ModuleNotFoundError:
-    import tomli as tomllib  # pip install tomli on older python
 
-from rdkit import RDLogger
+CFG = dict(
+    data_path="main_data_2/Drug_activity.csv",   # CSV with a SMILES column and a 0/1 label column
+    smiles_col="Smiles",
+    label_col="Labels",
+    out_dir="run",
+    seed=42,
+    test_frac=0.20,          # outer scaffold split: external test set
+    inner_val_frac=0.15,     # final fit: validation share of the development set (early stopping, cutoff)
+    n_folds=5,               # scaffold CV folds inside the development set
+    corr_threshold=0.85,     # descriptor redundancy filter (|r| >= threshold is dropped)
+    n_configs=20,            # random-search configurations, shared by all four GNNs
+    halving_keep=5,          # configs that go on to all folds after the first-fold screen (0 = full CV)
+    tune_epochs=50,
+    tune_patience=10,
+    screen_epochs=20,        # short first-fold screen of all configurations (successive halving)
+    final_epochs=200,
+    final_patience=30,
+    batch_size=128,
+    eval_batch_size=2048,
+    heads=8,
+    n_boot=1000,
+    knn_k=15,
+    workers=0,               # DataLoader workers (0 is fastest on CPU)
+    explain_n=50,            # compounds explained (random, class-balanced sample of the test set)
+    shap_nsamples="auto",
+    ig_steps=50,
+    gnnexplainer_epochs=200,
+    gnnexplainer_desc_epochs=100,
+    curve_folds=5,           # learning curves: scaffold CV folds (as in the original analysis)
+    resample_each_epoch=True,  # fresh 1:1 undersample of the training data every epoch (the model sees all inactives over time)
+    embed_categorical=True,    # learned embeddings for atomic number, hybridisation, period, group (inside the model)
+    ensemble=True,             # reported predictions = mean over the final-training seeds
+    grad_clip=5.0,
+    amp=False,               # mixed precision, CUDA only
+)
 
-# suppresses RDKit's deprecation warnings; parsing errors still show
-RDLogger.DisableLog('rdApp.*')
+
+GRID = dict(
+    hidden=[64, 128, 256],
+    dropout=[0.1, 0.2, 0.3],
+    layers=[2, 3, 4],
+    lr=[1e-3, 5e-4, 1e-4],
+    weight_decay=[1e-5, 1e-4, 5e-4],
+    pool=["mean", "mean_max"],
+)
 
 
-def _load_toml(path='config.toml'):
-    if not os.path.exists(path):
-        print(f"no {path} found, falling back to hardcoded defaults")
-        return {}
-    with open(path, 'rb') as f:
-        return tomllib.load(f)
+KINDS = ["gcn", "gat", "gcn_transformer", "gat_transformer"]
 
 
-_toml = _load_toml()
+BASELINES = ["baseline_gradient_boosting", "baseline_random_forest", "baseline_logistic_regression",
+             "baseline_linear_svm", "baseline_knn"]
 
-# falls back to these defaults if config.toml or a given key is missing
-SEED = _toml.get('run', {}).get('seed', 42)
-RAW_DATA_PATH = _toml.get('data', {}).get('path', 'main_data_2/Drug_activity.csv')
-CACHE_PATH = _toml.get('data', {}).get('cache_path', 'enhanced_drug_data_with_descriptors.csv')
-USE_CACHE = _toml.get('data', {}).get('use_cache', True)
-GRAPH_CACHE_PATH = _toml.get('data', {}).get('graph_cache_path', 'molecule_graphs.pt')
-BALANCE_FULL_DATASET = _toml.get('data', {}).get('balance_full_dataset', True)
-BALANCED_PATH = _toml.get('data', {}).get('balanced_path', 'main_data_2/Drug_activity_balanced.csv')
-BALANCED_CACHE_PATH = _toml.get('data', {}).get('balanced_cache_path', 'balanced_descriptors.csv')
-BALANCED_GRAPH_CACHE_PATH = _toml.get('data', {}).get('balanced_graph_cache_path', 'balanced_molecule_graphs.pt')
-CORRELATION_THRESHOLD = _toml.get('crossval', {}).get('correlation_threshold', 0.85)
-N_FOLDS = _toml.get('crossval', {}).get('folds', 5)
-CV_MODELS = _toml.get('crossval', {}).get('models') or None  # empty list -> run all
-BASELINE_MODELS = _toml.get('crossval', {}).get('baseline_models') or None  # empty -> run all five
-SKIP_BASELINE = _toml.get('crossval', {}).get('skip_baseline', False)
-EXPLAIN_N_MOLECULES = _toml.get('explain', {}).get('n_molecules', 20)
-TUNE_TEST_SIZE = _toml.get('tuning', {}).get('test_size', 0.2)
-TUNE_FOLDS = _toml.get('tuning', {}).get('folds', 5)
-TUNE_EPOCHS = _toml.get('tuning', {}).get('epochs', 40)
-TUNE_PATIENCE = _toml.get('tuning', {}).get('patience', 8)
-VISUALIZE_N_MOLECULES = _toml.get('visualize', {}).get('n_molecules', 3)
 
-OUTPUT_DIR = _toml.get('paths', {}).get('output_dir', 'test_results')
-MODEL_DIR = _toml.get('paths', {}).get('model_dir', 'trained_models')
-HISTORY_DIR = _toml.get('paths', {}).get('history_dir', 'training_history')
-FIGURE_DIR = _toml.get('paths', {}).get('figure_dir', 'figures')
-for d in (OUTPUT_DIR, MODEL_DIR, HISTORY_DIR, FIGURE_DIR):
-    os.makedirs(d, exist_ok=True)
-
-_train_toml = _toml.get('training', {})
-TRAIN_CONFIG = {
-    'epochs': _train_toml.get('epochs', 200),
-    'initial_lr': _train_toml.get('initial_lr', 0.001),
-    'weight_decay': _train_toml.get('weight_decay', 1e-4),
-    'early_stop_patience': _train_toml.get('early_stop_patience', 25),
-    'batch_size': _train_toml.get('batch_size', 32),
-    'hidden_dim': _train_toml.get('hidden_dim', 128),
-    'dropout': _train_toml.get('dropout', 0.2),
+DISPLAY = {
+    "gcn": "GCN", "gat": "GAT", "gcn_transformer": "GCN-Transformer", "gat_transformer": "GAT-Transformer",
+    "baseline_gradient_boosting": "Gradient Boosting", "baseline_random_forest": "Random Forest",
+    "baseline_logistic_regression": "Logistic Regression", "baseline_linear_svm": "Linear SVM",
+    "baseline_knn": "k-NN",
 }
 
 
-def _select_device(preference='auto'):
-    """'auto' picks CUDA if available, otherwise CPU; MPS is skipped
-    even on Apple Silicon, since torch_geometric's scatter ops hit an
-    MPS-unsupported operator that PYTORCH_ENABLE_MPS_FALLBACK does not
-    cover. preference='mps' can still be set explicitly in
-    config.toml."""
-    if preference == 'cpu':
-        return torch.device('cpu')
-    if preference == 'cuda':
-        return torch.device('cuda')
-    if preference == 'mps':
-        os.environ.setdefault('PYTORCH_ENABLE_MPS_FALLBACK', '1')  # covers some ops, not the one that mattered here
-        return torch.device('mps')
-    # cuda if available, else cpu; mps skipped, see docstring
-    if torch.cuda.is_available():
-        return torch.device('cuda')
-    return torch.device('cpu')
+PKL_NAME = {"gcn": "gnn_model", "gat": "gat_model", "gcn_transformer": "gcn_transformer_model",
+            "gat_transformer": "gat_transformer_model"}
 
 
-DEVICE_PREFERENCE = _toml.get('run', {}).get('device', 'auto')
-DEVICE = _select_device(DEVICE_PREFERENCE)
+PRIORITY_DESCRIPTORS = ["MolWt", "LogP", "NumHDonors", "NumHAcceptors", "TPSA", "NumRotatableBonds",
+                        "NumAromaticRings", "HeavyAtomCount", "FractionCsp3", "RingCount"]
 
 
-def set_seed(seed=SEED):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
-    # not bit-for-bit deterministic on GPU; use
-    # torch.use_deterministic_algorithms(True) for that, at a speed cost
+METRIC_COLS = ["accuracy", "balanced_accuracy", "auc", "pr_auc", "precision", "recall", "f1", "mcc"]
 
 
-def reload_config(path='config.toml'):
-    """Re-reads config.toml without restarting Python. Does not affect
-    TRAIN_CONFIG values already in use by an in-progress training
-    run."""
-    global _toml, SEED, RAW_DATA_PATH, CACHE_PATH, USE_CACHE, GRAPH_CACHE_PATH, CORRELATION_THRESHOLD, N_FOLDS
-    global CV_MODELS, BASELINE_MODELS, SKIP_BASELINE, EXPLAIN_N_MOLECULES, VISUALIZE_N_MOLECULES, TRAIN_CONFIG
-    global BALANCE_FULL_DATASET, BALANCED_PATH, BALANCED_CACHE_PATH, BALANCED_GRAPH_CACHE_PATH
-    global TUNE_TEST_SIZE, TUNE_FOLDS, TUNE_EPOCHS, TUNE_PATIENCE
-    global DEVICE_PREFERENCE, DEVICE
+CURVE_FRACTIONS = [0.1, 0.2, 0.3, 0.5, 0.7, 1.0]
 
-    _toml = _load_toml(path)
 
-    SEED = _toml.get('run', {}).get('seed', 42)
-    RAW_DATA_PATH = _toml.get('data', {}).get('path', 'main_data_2/Drug_activity.csv')
-    CACHE_PATH = _toml.get('data', {}).get('cache_path', 'enhanced_drug_data_with_descriptors.csv')
-    USE_CACHE = _toml.get('data', {}).get('use_cache', True)
-    GRAPH_CACHE_PATH = _toml.get('data', {}).get('graph_cache_path', 'molecule_graphs.pt')
-    BALANCE_FULL_DATASET = _toml.get('data', {}).get('balance_full_dataset', True)
-    BALANCED_PATH = _toml.get('data', {}).get('balanced_path', 'main_data_2/Drug_activity_balanced.csv')
-    BALANCED_CACHE_PATH = _toml.get('data', {}).get('balanced_cache_path', 'balanced_descriptors.csv')
-    BALANCED_GRAPH_CACHE_PATH = _toml.get('data', {}).get('balanced_graph_cache_path', 'balanced_molecule_graphs.pt')
-    CORRELATION_THRESHOLD = _toml.get('crossval', {}).get('correlation_threshold', 0.85)
-    N_FOLDS = _toml.get('crossval', {}).get('folds', 5)
-    CV_MODELS = _toml.get('crossval', {}).get('models') or None
-    BASELINE_MODELS = _toml.get('crossval', {}).get('baseline_models') or None
-    SKIP_BASELINE = _toml.get('crossval', {}).get('skip_baseline', False)
-    EXPLAIN_N_MOLECULES = _toml.get('explain', {}).get('n_molecules', 20)
-    TUNE_TEST_SIZE = _toml.get('tuning', {}).get('test_size', 0.2)
-    TUNE_FOLDS = _toml.get('tuning', {}).get('folds', 5)
-    TUNE_EPOCHS = _toml.get('tuning', {}).get('epochs', 40)
-    TUNE_PATIENCE = _toml.get('tuning', {}).get('patience', 8)
-    VISUALIZE_N_MOLECULES = _toml.get('visualize', {}).get('n_molecules', 3)
-    DEVICE_PREFERENCE = _toml.get('run', {}).get('device', 'auto')
-    DEVICE = _select_device(DEVICE_PREFERENCE)
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    _train_toml = _toml.get('training', {})
-    TRAIN_CONFIG = {
-        'epochs': _train_toml.get('epochs', 200),
-        'initial_lr': _train_toml.get('initial_lr', 0.001),
-        'weight_decay': _train_toml.get('weight_decay', 1e-4),
-        'early_stop_patience': _train_toml.get('early_stop_patience', 25),
-        'batch_size': _train_toml.get('batch_size', 32),
-        'hidden_dim': _train_toml.get('hidden_dim', 128),
-        'dropout': _train_toml.get('dropout', 0.2),
-    }
 
-    print("config reloaded from", path)
+# Everything that is saved goes into a folder (same layout as the original analysis):
+#   cache/             prepared data (graphs, splits) so later stages start fast
+#   eda/               data visualisation before training, dataset summary, splits.csv, descriptor statistics
+#   tuning/            tuning runs, best hyperparameters, hyperparameter table, per-model tuning results
+#   cross_validation/  cv_folds.csv, cv_mean_std_table.csv
+#   trained_models/    model weights (<kind>_seed<N>.pt, <name>.pt) and best hyperparameters per model
+#   training_history/  per-epoch loss / AUC / accuracy of every final model
+#   test_results/      result pickles, test predictions, test metrics, bootstrap CIs, DeLong, seed repeats
+#   learning_curves/   learning-curve tables
+#   explainability/    importance CSVs, agreement and deletion checks
+#   figures/           every figure (PDF)
+#   logs/              training_log.txt, run_log.csv, run_info.json
+LOG_FILES = {"training_log.txt", "run_log.csv", "run_info.json"}
+
+
+def folder_for(name):
+    """One folder per kind of output (see the table above)."""
+    if name in LOG_FILES:
+        return "logs"
+    if name.startswith(("tuning_runs", "best_params", "hyperparameter_table")) or name.endswith("_tuning_results.csv"):
+        return "tuning"
+    if name.startswith(("cv_folds", "cv_mean_std")):
+        return "cross_validation"
+    if name.startswith("learning_curve"):
+        return "learning_curves"
+    if name.startswith("explainability_") or name.endswith("_importance.csv"):
+        return "explainability"
+    if name.startswith(("descriptor_statistics", "dataset_summary", "splits")):
+        return "eda"
+    return "test_results"
+
+
+def path(*parts):
+    """path("x.csv") -> <out>/<folder for x>/x.csv ; path("folder", "x") -> <out>/folder/x."""
+    if len(parts) == 1:
+        parts = (folder_for(parts[0]), parts[0])
+    p = os.path.join(CFG["out_dir"], *parts)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    return p
+
+
+def pkl_key(key):
+    return PKL_NAME.get(key, key)
+
+
+def apply_quick():
+    """Tiny settings for a smoke test of the whole pipeline (minutes, not hours)."""
+    CFG.update(n_configs=2, halving_keep=1, tune_epochs=3, tune_patience=2, final_epochs=4, final_patience=2,
+               n_boot=50, screen_epochs=2)
+    GRID.update(hidden=[64], layers=[2, 3])
+    CURVE_FRACTIONS[:] = [0.5, 1.0]
+    CFG["curve_folds"] = 2
+    if os.path.basename(os.path.normpath(CFG["out_dir"])) != "quick_test":
+        CFG["out_dir"] = os.path.join(CFG["out_dir"], "quick_test")   # never mixes with the real results
+    print("=" * 70 + "\nQUICK TEST MODE: tiny epochs, results go to " + CFG["out_dir"]
+          + "\nThese numbers are NOT for the paper. Set QUICK = False for the real run.\n" + "=" * 70)
+    CFG.update(explain_n=6, shap_nsamples=100, ig_steps=5, gnnexplainer_epochs=10, gnnexplainer_desc_epochs=10)
+
+
+# ----------------------------------------------------------------------------- logging
+class _Tee:
+    """Copies everything printed to training_log.txt as well as the screen."""
+
+    def __init__(self, stream, file):
+        self.stream, self.file = stream, file
+
+    def write(self, text):
+        self.stream.write(text)
+        self.file.write(text)
+        self.file.flush()
+
+    def flush(self):
+        self.stream.flush()
+        self.file.flush()
+
+    def __getattr__(self, name):
+        return getattr(self.stream, name)
+
+
+def start_log():
+    """Everything printed from now on is also appended to <out_dir>/training_log.txt."""
+    if isinstance(sys.stdout, _Tee):
+        return
+    sys.stdout = _Tee(sys.stdout, open(path("training_log.txt"), "a", encoding="utf-8"))
+
+
+def save_run_info(**extra):
+    """Settings, grid, package versions and device, so the run can be reported and reproduced."""
+    import numpy, pandas, rdkit, sklearn, torch_geometric
+    info = dict(time=datetime.now().isoformat(timespec="seconds"), device=str(DEVICE),
+                versions=dict(torch=torch.__version__, torch_geometric=torch_geometric.__version__,
+                              rdkit=rdkit.__version__, sklearn=sklearn.__version__, numpy=numpy.__version__,
+                              pandas=pandas.__version__),
+                config={k: v for k, v in CFG.items()}, grid=GRID, **extra)
+    with open(path("run_info.json"), "w") as f:
+        json.dump(info, f, indent=2, default=str)
+
+
+def logged(fn):
+    """Stage decorator: log file, start/end time, and one line per stage in run_log.csv."""
+    @functools.wraps(fn)
+    def wrapper(*a, **k):
+        start_log()
+        print(f"\n===== {fn.__name__} started {datetime.now():%Y-%m-%d %H:%M:%S} =====")
+        t0 = time.time()
+        out = fn(*a, **k)
+        sec = time.time() - t0
+        new = not os.path.exists(path("run_log.csv"))
+        with open(path("run_log.csv"), "a") as f:
+            if new:
+                f.write("stage,finished,minutes\n")
+            f.write(f"{fn.__name__},{datetime.now():%Y-%m-%d %H:%M:%S},{sec / 60:.2f}\n")
+        print(f"===== {fn.__name__} finished in {sec / 60:.1f} min =====")
+        return out
+    return wrapper

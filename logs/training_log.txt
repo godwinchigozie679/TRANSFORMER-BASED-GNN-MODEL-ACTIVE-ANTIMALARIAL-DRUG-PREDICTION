@@ -1,0 +1,882 @@
+
+===== prepare started 2026-11-13 07:46:27 =====
+126819 labelled rows, 123755 after removing exact duplicate rows
+using your descriptor file: 208 numeric columns
+10 molecules have no graph in your file and are dropped
+10 molecules have no row in your descriptor file and are dropped
+123745 valid molecules (12685 active, 111060 inactive, 10.3% active)
+SMILES with conflicting labels: 264
+         subset  compounds  active  inactive  active_pct
+   Full dataset     123745   12685    111060       10.25
+Development set      98995    9962     89033       10.06
+       Test set      24750    2723     22027       11.00
+208 descriptors; prepare took 25s
+===== prepare finished in 0.4 min =====
+done in 0.4 min
+
+===== class_balance started 2026-11-13 07:47:50 =====
+===== class_balance finished in 0.0 min =====
+
+===== descriptor_distributions started 2026-11-13 07:48:01 =====
+===== descriptor_distributions finished in 0.0 min =====
+
+===== correlation_heatmap started 2026-11-13 07:48:06 =====
+===== correlation_heatmap finished in 0.0 min =====
+
+===== sample_molecules started 2026-11-13 07:48:09 =====
+saved ./eda/sample_molecules.png
+===== sample_molecules finished in 0.0 min =====
+
+===== extreme_molecules started 2026-11-13 07:48:13 =====
+saved ./eda/extreme_molecules.png
+===== extreme_molecules finished in 0.0 min =====
+
+===== descriptor_statistics started 2026-11-13 07:48:19 =====
+196 of 208 descriptors differ between actives and inactives (FDR < 0.05)
+===== descriptor_statistics finished in 0.0 min =====
+
+===== split_overview started 2026-11-13 07:48:24 =====
+saved ./eda/data_split_overview.pdf
+===== split_overview finished in 0.0 min =====
+
+===== tune started 2026-11-13 07:48:40 =====
+tuning gcn
+  gcn cfg 0 fold 0: AUROC 0.9379 (17 epochs, 169.9s)
+  gcn cfg 1 fold 0: AUROC 0.9389 (16 epochs, 58.1s)
+  gcn cfg 2 fold 0: AUROC 0.9359 (20 epochs, 68.3s)
+  gcn cfg 3 fold 0: AUROC 0.9385 (20 epochs, 197.2s)
+  gcn cfg 4 fold 0: AUROC 0.9348 (20 epochs, 90.7s)
+  gcn cfg 5 fold 0: AUROC 0.9347 (20 epochs, 75.3s)
+  gcn cfg 6 fold 0: AUROC 0.9390 (20 epochs, 67.1s)
+  gcn cfg 7 fold 0: AUROC 0.9363 (20 epochs, 73.3s)
+  gcn cfg 8 fold 0: AUROC 0.9396 (20 epochs, 338.3s)
+  gcn cfg 9 fold 0: AUROC 0.9375 (20 epochs, 113.5s)
+  gcn cfg 10 fold 0: AUROC 0.9386 (14 epochs, 172.8s)
+  gcn cfg 11 fold 0: AUROC 0.9401 (20 epochs, 240.3s)
+  gcn cfg 12 fold 0: AUROC 0.9389 (20 epochs, 127.5s)
+  gcn cfg 13 fold 0: AUROC 0.9378 (17 epochs, 95.1s)
+  gcn cfg 14 fold 0: AUROC 0.9389 (20 epochs, 157.2s)
+  gcn cfg 15 fold 0: AUROC 0.9377 (15 epochs, 85.4s)
+  gcn cfg 16 fold 0: AUROC 0.9358 (20 epochs, 68.2s)
+  gcn cfg 17 fold 0: AUROC 0.9378 (20 epochs, 72.4s)
+  gcn cfg 18 fold 0: AUROC 0.9383 (20 epochs, 118.1s)
+  gcn cfg 19 fold 0: AUROC 0.9389 (20 epochs, 73.9s)
+  gcn cfg 11 fold 0: AUROC 0.9402 (32 epochs, 375.4s)
+  gcn cfg 11 fold 1: AUROC 0.9445 (43 epochs, 498.2s)
+  gcn cfg 11 fold 2: AUROC 0.9462 (21 epochs, 377.4s)
+  gcn cfg 11 fold 3: AUROC 0.9427 (37 epochs, 461.1s)
+  gcn cfg 11 fold 4: AUROC 0.9404 (36 epochs, 413.3s)
+  gcn cfg 8 fold 0: AUROC 0.9396 (23 epochs, 381.7s)
+  gcn cfg 8 fold 1: AUROC 0.9442 (45 epochs, 727.7s)
+  gcn cfg 8 fold 2: AUROC 0.9476 (43 epochs, 653.8s)
+  gcn cfg 8 fold 3: AUROC 0.9426 (34 epochs, 511.5s)
+  gcn cfg 8 fold 4: AUROC 0.9406 (50 epochs, 808.5s)
+  gcn cfg 6 fold 0: AUROC 0.9390 (28 epochs, 95.4s)
+  gcn cfg 6 fold 1: AUROC 0.9439 (50 epochs, 170.9s)
+  gcn cfg 6 fold 2: AUROC 0.9461 (43 epochs, 147.4s)
+  gcn cfg 6 fold 3: AUROC 0.9421 (41 epochs, 131.7s)
+  gcn cfg 6 fold 4: AUROC 0.9403 (50 epochs, 169.1s)
+  gcn cfg 12 fold 0: AUROC 0.9391 (33 epochs, 203.1s)
+  gcn cfg 12 fold 1: AUROC 0.9438 (49 epochs, 294.2s)
+  gcn cfg 12 fold 2: AUROC 0.9461 (29 epochs, 177.8s)
+  gcn cfg 12 fold 3: AUROC 0.9427 (38 epochs, 237.7s)
+  gcn cfg 12 fold 4: AUROC 0.9400 (50 epochs, 312.6s)
+  gcn cfg 1 fold 0: AUROC 0.9389 (16 epochs, 59.0s)
+  gcn cfg 1 fold 1: AUROC 0.9438 (42 epochs, 148.0s)
+  gcn cfg 1 fold 2: AUROC 0.9450 (30 epochs, 106.5s)
+  gcn cfg 1 fold 3: AUROC 0.9420 (28 epochs, 112.4s)
+  gcn cfg 1 fold 4: AUROC 0.9397 (37 epochs, 132.1s)
+  best gcn: {'hidden': 256, 'dropout': 0.1, 'layers': 4, 'lr': 0.0001, 'weight_decay': 0.0005, 'pool': 'mean_max'}  CV AUROC 0.9429 +/- 0.0028
+tuning gat
+  gat cfg 0 fold 0: AUROC 0.9380 (20 epochs, 255.4s)
+  gat cfg 1 fold 0: AUROC 0.9400 (20 epochs, 107.4s)
+  gat cfg 2 fold 0: AUROC 0.9347 (20 epochs, 106.0s)
+  gat cfg 3 fold 0: AUROC 0.9385 (20 epochs, 251.8s)
+  gat cfg 4 fold 0: AUROC 0.9350 (20 epochs, 137.5s)
+  gat cfg 5 fold 0: AUROC 0.9342 (20 epochs, 110.9s)
+  gat cfg 6 fold 0: AUROC 0.9391 (20 epochs, 100.4s)
+  gat cfg 7 fold 0: AUROC 0.9358 (20 epochs, 109.0s)
+  gat cfg 8 fold 0: AUROC 0.9391 (20 epochs, 437.4s)
+  gat cfg 9 fold 0: AUROC 0.9384 (20 epochs, 184.3s)
+  gat cfg 10 fold 0: AUROC 0.9392 (13 epochs, 197.2s)
+  gat cfg 11 fold 0: AUROC 0.9395 (20 epochs, 323.9s)
+  gat cfg 12 fold 0: AUROC 0.9396 (19 epochs, 163.9s)
+  gat cfg 13 fold 0: AUROC 0.9394 (16 epochs, 145.7s)
+  gat cfg 14 fold 0: AUROC 0.9380 (20 epochs, 216.7s)
+  gat cfg 15 fold 0: AUROC 0.9387 (20 epochs, 163.8s)
+  gat cfg 16 fold 0: AUROC 0.9347 (20 epochs, 109.7s)
+  gat cfg 17 fold 0: AUROC 0.9366 (20 epochs, 113.5s)
+  gat cfg 18 fold 0: AUROC 0.9398 (20 epochs, 193.6s)
+  gat cfg 19 fold 0: AUROC 0.9390 (20 epochs, 108.0s)
+  gat cfg 1 fold 0: AUROC 0.9400 (28 epochs, 160.5s)
+  gat cfg 1 fold 1: AUROC 0.9454 (37 epochs, 204.6s)
+  gat cfg 1 fold 2: AUROC 0.9455 (44 epochs, 250.7s)
+  gat cfg 1 fold 3: AUROC 0.9418 (34 epochs, 188.7s)
+  gat cfg 1 fold 4: AUROC 0.9380 (27 epochs, 142.0s)
+  gat cfg 18 fold 0: AUROC 0.9398 (28 epochs, 259.9s)
+  gat cfg 18 fold 1: AUROC 0.9418 (34 epochs, 316.8s)
+  gat cfg 18 fold 2: AUROC 0.9456 (31 epochs, 290.2s)
+  gat cfg 18 fold 3: AUROC 0.9408 (38 epochs, 361.7s)
+  gat cfg 18 fold 4: AUROC 0.9399 (38 epochs, 346.6s)
+  gat cfg 12 fold 0: AUROC 0.9396 (19 epochs, 153.1s)
+  gat cfg 12 fold 1: AUROC 0.9441 (43 epochs, 365.1s)
+  gat cfg 12 fold 2: AUROC 0.9449 (30 epochs, 246.0s)
+  gat cfg 12 fold 3: AUROC 0.9424 (38 epochs, 318.5s)
+  gat cfg 12 fold 4: AUROC 0.9401 (50 epochs, 408.7s)
+  gat cfg 11 fold 0: AUROC 0.9395 (23 epochs, 361.2s)
+  gat cfg 11 fold 1: AUROC 0.9450 (46 epochs, 740.3s)
+  gat cfg 11 fold 2: AUROC 0.9464 (23 epochs, 359.5s)
+  gat cfg 11 fold 3: AUROC 0.9414 (27 epochs, 416.8s)
+  gat cfg 11 fold 4: AUROC 0.9406 (45 epochs, 709.0s)
+  gat cfg 13 fold 0: AUROC 0.9394 (16 epochs, 144.8s)
+  gat cfg 13 fold 1: AUROC 0.9421 (33 epochs, 299.6s)
+  gat cfg 13 fold 2: AUROC 0.9465 (31 epochs, 288.1s)
+  gat cfg 13 fold 3: AUROC 0.9412 (45 epochs, 415.3s)
+  gat cfg 13 fold 4: AUROC 0.9394 (42 epochs, 376.1s)
+  best gat: {'hidden': 256, 'dropout': 0.3, 'layers': 3, 'lr': 0.0005, 'weight_decay': 1e-05, 'pool': 'mean'}  CV AUROC 0.9426 +/- 0.0027
+tuning gcn_transformer
+  gcn_transformer cfg 0 fold 0: AUROC 0.9374 (20 epochs, 282.0s)
+  gcn_transformer cfg 1 fold 0: AUROC 0.9382 (20 epochs, 104.6s)
+  gcn_transformer cfg 2 fold 0: AUROC 0.9353 (20 epochs, 102.9s)
+  gcn_transformer cfg 3 fold 0: AUROC 0.9379 (20 epochs, 291.8s)
+  gcn_transformer cfg 4 fold 0: AUROC 0.9350 (20 epochs, 132.4s)
+  gcn_transformer cfg 5 fold 0: AUROC 0.9338 (20 epochs, 110.5s)
+  gcn_transformer cfg 6 fold 0: AUROC 0.9387 (20 epochs, 96.8s)
+  gcn_transformer cfg 7 fold 0: AUROC 0.9345 (20 epochs, 113.4s)
+  gcn_transformer cfg 8 fold 0: AUROC 0.9407 (20 epochs, 480.5s)
+  gcn_transformer cfg 9 fold 0: AUROC 0.9364 (20 epochs, 169.8s)
+  gcn_transformer cfg 10 fold 0: AUROC 0.9380 (15 epochs, 245.7s)
+  gcn_transformer cfg 11 fold 0: AUROC 0.9395 (20 epochs, 323.2s)
+  gcn_transformer cfg 12 fold 0: AUROC 0.9400 (20 epochs, 174.3s)
+  gcn_transformer cfg 13 fold 0: AUROC 0.9385 (20 epochs, 165.6s)
+  gcn_transformer cfg 14 fold 0: AUROC 0.9379 (20 epochs, 206.7s)
+  gcn_transformer cfg 15 fold 0: AUROC 0.9384 (20 epochs, 161.1s)
+  gcn_transformer cfg 16 fold 0: AUROC 0.9353 (20 epochs, 99.0s)
+  gcn_transformer cfg 17 fold 0: AUROC 0.9360 (20 epochs, 104.2s)
+  gcn_transformer cfg 18 fold 0: AUROC 0.9405 (20 epochs, 173.8s)
+  gcn_transformer cfg 19 fold 0: AUROC 0.9381 (20 epochs, 104.3s)
+  gcn_transformer cfg 8 fold 0: AUROC 0.9407 (28 epochs, 693.9s)
+  gcn_transformer cfg 8 fold 1: AUROC 0.9447 (38 epochs, 915.3s)
+  gcn_transformer cfg 8 fold 2: AUROC 0.9483 (30 epochs, 750.2s)
+  gcn_transformer cfg 8 fold 3: AUROC 0.9423 (47 epochs, 1184.4s)
+  gcn_transformer cfg 8 fold 4: AUROC 0.9412 (50 epochs, 1249.1s)
+  gcn_transformer cfg 18 fold 0: AUROC 0.9405 (28 epochs, 242.2s)
+  gcn_transformer cfg 18 fold 1: AUROC 0.9430 (38 epochs, 343.7s)
+  gcn_transformer cfg 18 fold 2: AUROC 0.9460 (31 epochs, 264.3s)
+  gcn_transformer cfg 18 fold 3: AUROC 0.9412 (42 epochs, 363.6s)
+  gcn_transformer cfg 18 fold 4: AUROC 0.9407 (31 epochs, 252.3s)
+  gcn_transformer cfg 12 fold 0: AUROC 0.9404 (32 epochs, 283.1s)
+  gcn_transformer cfg 12 fold 1: AUROC 0.9433 (50 epochs, 430.8s)
+  gcn_transformer cfg 12 fold 2: AUROC 0.9465 (48 epochs, 426.6s)
+  gcn_transformer cfg 12 fold 3: AUROC 0.9423 (38 epochs, 338.3s)
+  gcn_transformer cfg 12 fold 4: AUROC 0.9418 (50 epochs, 438.9s)
+  gcn_transformer cfg 11 fold 0: AUROC 0.9395 (28 epochs, 435.5s)
+  gcn_transformer cfg 11 fold 1: AUROC 0.9453 (35 epochs, 558.3s)
+  gcn_transformer cfg 11 fold 2: AUROC 0.9470 (21 epochs, 323.4s)
+  gcn_transformer cfg 11 fold 3: AUROC 0.9421 (25 epochs, 406.2s)
+  gcn_transformer cfg 11 fold 4: AUROC 0.9412 (45 epochs, 740.2s)
+  gcn_transformer cfg 6 fold 0: AUROC 0.9392 (32 epochs, 159.4s)
+  gcn_transformer cfg 6 fold 1: AUROC 0.9442 (50 epochs, 234.5s)
+  gcn_transformer cfg 6 fold 2: AUROC 0.9469 (43 epochs, 219.6s)
+  gcn_transformer cfg 6 fold 3: AUROC 0.9428 (50 epochs, 258.3s)
+  gcn_transformer cfg 6 fold 4: AUROC 0.9407 (50 epochs, 235.5s)
+  best gcn_transformer: {'hidden': 256, 'dropout': 0.1, 'layers': 4, 'lr': 0.0001, 'weight_decay': 0.0005, 'pool': 'mean_max'}  CV AUROC 0.9435 +/- 0.0028
+tuning gat_transformer
+  gat_transformer cfg 0 fold 0: AUROC 0.9374 (20 epochs, 331.7s)
+  gat_transformer cfg 1 fold 0: AUROC 0.9392 (20 epochs, 129.1s)
+  gat_transformer cfg 2 fold 0: AUROC 0.9379 (20 epochs, 121.4s)
+  gat_transformer cfg 3 fold 0: AUROC 0.9375 (15 epochs, 241.2s)
+  gat_transformer cfg 4 fold 0: AUROC 0.9357 (20 epochs, 190.3s)
+  gat_transformer cfg 5 fold 0: AUROC 0.9359 (20 epochs, 130.9s)
+  gat_transformer cfg 6 fold 0: AUROC 0.9402 (20 epochs, 128.2s)
+  gat_transformer cfg 7 fold 0: AUROC 0.9374 (20 epochs, 132.5s)
+  gat_transformer cfg 8 fold 0: AUROC 0.9408 (20 epochs, 580.2s)
+  gat_transformer cfg 9 fold 0: AUROC 0.9371 (20 epochs, 217.9s)
+  gat_transformer cfg 10 fold 0: AUROC 0.9378 (14 epochs, 299.5s)
+  gat_transformer cfg 11 fold 0: AUROC 0.9395 (20 epochs, 428.2s)
+  gat_transformer cfg 12 fold 0: AUROC 0.9393 (20 epochs, 218.7s)
+  gat_transformer cfg 13 fold 0: AUROC 0.9393 (20 epochs, 229.2s)
+  gat_transformer cfg 14 fold 0: AUROC 0.9377 (20 epochs, 286.7s)
+  gat_transformer cfg 15 fold 0: AUROC 0.9386 (18 epochs, 184.3s)
+  gat_transformer cfg 16 fold 0: AUROC 0.9380 (20 epochs, 123.4s)
+  gat_transformer cfg 17 fold 0: AUROC 0.9394 (20 epochs, 130.4s)
+  gat_transformer cfg 18 fold 0: AUROC 0.9392 (20 epochs, 228.8s)
+  gat_transformer cfg 19 fold 0: AUROC 0.9405 (20 epochs, 133.4s)
+  gat_transformer cfg 8 fold 0: AUROC 0.9408 (28 epochs, 810.8s)
+  gat_transformer cfg 8 fold 1: AUROC 0.9438 (40 epochs, 1167.0s)
+  gat_transformer cfg 8 fold 2: AUROC 0.9472 (28 epochs, 792.9s)
+  gat_transformer cfg 8 fold 3: AUROC 0.9434 (40 epochs, 1167.4s)
+  gat_transformer cfg 8 fold 4: AUROC 0.9413 (45 epochs, 1294.6s)
+  gat_transformer cfg 19 fold 0: AUROC 0.9405 (23 epochs, 154.2s)
+  gat_transformer cfg 19 fold 1: AUROC 0.9420 (35 epochs, 226.2s)
+  gat_transformer cfg 19 fold 2: AUROC 0.9462 (25 epochs, 160.4s)
+  gat_transformer cfg 19 fold 3: AUROC 0.9418 (41 epochs, 271.0s)
+  gat_transformer cfg 19 fold 4: AUROC 0.9415 (50 epochs, 323.7s)
+  gat_transformer cfg 6 fold 0: AUROC 0.9407 (35 epochs, 222.3s)
+  gat_transformer cfg 6 fold 1: AUROC 0.9433 (35 epochs, 217.3s)
+  gat_transformer cfg 6 fold 2: AUROC 0.9457 (36 epochs, 220.1s)
+  gat_transformer cfg 6 fold 3: AUROC 0.9420 (50 epochs, 326.9s)
+  gat_transformer cfg 6 fold 4: AUROC 0.9397 (44 epochs, 279.4s)
+  gat_transformer cfg 11 fold 0: AUROC 0.9395 (25 epochs, 540.9s)
+  gat_transformer cfg 11 fold 1: AUROC 0.9464 (35 epochs, 746.3s)
+  gat_transformer cfg 11 fold 2: AUROC 0.9468 (30 epochs, 619.5s)
+  gat_transformer cfg 11 fold 3: AUROC 0.9425 (40 epochs, 856.5s)
+  gat_transformer cfg 11 fold 4: AUROC 0.9417 (44 epochs, 961.4s)
+  gat_transformer cfg 17 fold 0: AUROC 0.9403 (38 epochs, 250.2s)
+  gat_transformer cfg 17 fold 1: AUROC 0.9421 (50 epochs, 317.9s)
+  gat_transformer cfg 17 fold 2: AUROC 0.9458 (48 epochs, 309.4s)
+  gat_transformer cfg 17 fold 3: AUROC 0.9411 (50 epochs, 340.8s)
+  gat_transformer cfg 17 fold 4: AUROC 0.9391 (50 epochs, 328.9s)
+  best gat_transformer: {'hidden': 256, 'dropout': 0.3, 'layers': 3, 'lr': 0.0005, 'weight_decay': 1e-05, 'pool': 'mean'}  CV AUROC 0.9434 +/- 0.0028
+cross-validating baseline_gradient_boosting
+cross-validating baseline_random_forest
+cross-validating baseline_logistic_regression
+cross-validating baseline_linear_svm
+cross-validating baseline_knn
+                       model      accuracy balanced_accuracy           auc        pr_auc     precision        recall            f1           mcc
+                         gcn 0.867 ± 0.012     0.876 ± 0.004 0.943 ± 0.003 0.694 ± 0.020 0.425 ± 0.026 0.886 ± 0.008 0.574 ± 0.023 0.555 ± 0.020
+                         gat 0.869 ± 0.016     0.875 ± 0.003 0.943 ± 0.003 0.702 ± 0.019 0.428 ± 0.041 0.882 ± 0.016 0.576 ± 0.033 0.556 ± 0.027
+             gcn_transformer 0.857 ± 0.028     0.874 ± 0.008 0.943 ± 0.003 0.695 ± 0.012 0.410 ± 0.050 0.895 ± 0.022 0.560 ± 0.045 0.544 ± 0.039
+             gat_transformer 0.875 ± 0.007     0.876 ± 0.005 0.943 ± 0.003 0.701 ± 0.019 0.440 ± 0.012 0.877 ± 0.015 0.586 ± 0.011 0.565 ± 0.009
+  baseline_gradient_boosting 0.864 ± 0.011     0.869 ± 0.005 0.935 ± 0.005 0.647 ± 0.023 0.417 ± 0.033 0.876 ± 0.005 0.565 ± 0.030 0.544 ± 0.025
+      baseline_random_forest 0.857 ± 0.014     0.867 ± 0.003 0.933 ± 0.005 0.645 ± 0.027 0.405 ± 0.033 0.878 ± 0.013 0.554 ± 0.029 0.534 ± 0.023
+baseline_logistic_regression 0.865 ± 0.007     0.849 ± 0.003 0.920 ± 0.004 0.559 ± 0.023 0.415 ± 0.024 0.829 ± 0.003 0.553 ± 0.021 0.524 ± 0.017
+         baseline_linear_svm 0.865 ± 0.008     0.849 ± 0.005 0.920 ± 0.004 0.557 ± 0.024 0.416 ± 0.025 0.829 ± 0.003 0.553 ± 0.023 0.525 ± 0.019
+                baseline_knn 0.856 ± 0.015     0.846 ± 0.008 0.915 ± 0.007 0.562 ± 0.029 0.399 ± 0.032 0.833 ± 0.009 0.539 ± 0.029 0.511 ± 0.027
+===== tune finished in 910.8 min =====
+done in 910.8 min
+
+===== final started 2026-11-13 22:59:30 =====
+final fit: 16604 training (undersampled), 14892 validation, 24750 test compounds, 159 descriptors kept
+  gcn seed 42: val AUROC 0.9359, test AUROC 0.9403, AP 0.6909 (64 epochs, 1065s)
+  gcn seed 43: val AUROC 0.9350, test AUROC 0.9389, AP 0.6893 (50 epochs, 792s)
+  gcn seed 44: val AUROC 0.9368, test AUROC 0.9400, AP 0.6961 (61 epochs, 948s)
+  gcn: reported result (mean of 3 seed(s)): test AUROC 0.9414, AP 0.6989
+  gat seed 42: val AUROC 0.9372, test AUROC 0.9407, AP 0.6939 (52 epochs, 829s)
+  gat seed 43: val AUROC 0.9380, test AUROC 0.9388, AP 0.6883 (54 epochs, 842s)
+  gat seed 44: val AUROC 0.9362, test AUROC 0.9410, AP 0.7005 (59 epochs, 927s)
+  gat: reported result (mean of 3 seed(s)): test AUROC 0.9426, AP 0.7036
+  gcn_transformer seed 42: val AUROC 0.9364, test AUROC 0.9400, AP 0.6921 (54 epochs, 1240s)
+  gcn_transformer seed 43: val AUROC 0.9376, test AUROC 0.9400, AP 0.6892 (50 epochs, 1214s)
+  gcn_transformer seed 44: val AUROC 0.9371, test AUROC 0.9397, AP 0.6930 (50 epochs, 1189s)
+  gcn_transformer: reported result (mean of 3 seed(s)): test AUROC 0.9414, AP 0.6966
+  gat_transformer seed 42: val AUROC 0.9386, test AUROC 0.9416, AP 0.7011 (71 epochs, 1493s)
+  gat_transformer seed 43: val AUROC 0.9371, test AUROC 0.9399, AP 0.6834 (44 epochs, 932s)
+  gat_transformer seed 44: val AUROC 0.9384, test AUROC 0.9410, AP 0.7041 (72 epochs, 1501s)
+  gat_transformer: reported result (mean of 3 seed(s)): test AUROC 0.9433, AP 0.7037
+  baseline_gradient_boosting: test AUROC 0.9342, AP 0.6409
+  baseline_random_forest: test AUROC 0.9317, AP 0.6419
+  baseline_logistic_regression: test AUROC 0.9180, AP 0.5805
+  baseline_linear_svm: test AUROC 0.9178, AP 0.5779
+  baseline_knn: test AUROC 0.9117, AP 0.5710
+===== final finished in 216.5 min =====
+done in 216.5 min
+
+===== report started 2026-11-14 02:36:01 =====
+              Model      AUC     AUC 95% CI   PR-AUC  PR-AUC 95% CI
+                GCN 0.941353 (0.937, 0.945) 0.698865 (0.683, 0.716)
+                GAT 0.942582 (0.939, 0.946) 0.703609 (0.686, 0.720)
+    GCN-Transformer 0.941356 (0.937, 0.945) 0.696617 (0.679, 0.713)
+    GAT-Transformer 0.943276 (0.939, 0.947) 0.703706 (0.686, 0.721)
+  Gradient Boosting 0.934218 (0.930, 0.938) 0.640859 (0.623, 0.660)
+      Random Forest 0.931710 (0.927, 0.936) 0.641851 (0.622, 0.660)
+Logistic Regression 0.917954 (0.913, 0.923) 0.580536 (0.560, 0.601)
+         Linear SVM 0.917803 (0.913, 0.923) 0.577903 (0.557, 0.599)
+               k-NN 0.911708 (0.906, 0.917) 0.571012 (0.552, 0.590)
+tables written to .
+===== report finished in 1.7 min =====
+done in 1.7 min
+
+===== curves started 2026-11-14 02:37:44 =====
+  fold 1 fraction 0.1: gcn n=1612 AUROC 0.920
+  fold 1 fraction 0.1: gat n=1612 AUROC 0.918
+  fold 1 fraction 0.1: gcn_transformer n=1612 AUROC 0.920
+  fold 1 fraction 0.1: gat_transformer n=1612 AUROC 0.918
+  fold 1 fraction 0.1: gradient_boosting n=1612 AUROC 0.910
+  fold 1 fraction 0.1: random_forest n=1612 AUROC 0.909
+  fold 1 fraction 0.1: logistic_regression n=1612 AUROC 0.893
+  fold 1 fraction 0.1: linear_svm n=1612 AUROC 0.897
+  fold 1 fraction 0.1: knn n=1612 AUROC 0.881
+  fold 1 fraction 0.2: gcn n=3224 AUROC 0.926
+  fold 1 fraction 0.2: gat n=3224 AUROC 0.921
+  fold 1 fraction 0.2: gcn_transformer n=3224 AUROC 0.926
+  fold 1 fraction 0.2: gat_transformer n=3224 AUROC 0.924
+  fold 1 fraction 0.2: gradient_boosting n=3224 AUROC 0.919
+  fold 1 fraction 0.2: random_forest n=3224 AUROC 0.917
+  fold 1 fraction 0.2: logistic_regression n=3224 AUROC 0.906
+  fold 1 fraction 0.2: linear_svm n=3224 AUROC 0.908
+  fold 1 fraction 0.2: knn n=3224 AUROC 0.894
+  fold 1 fraction 0.3: gcn n=4838 AUROC 0.931
+  fold 1 fraction 0.3: gat n=4838 AUROC 0.929
+  fold 1 fraction 0.3: gcn_transformer n=4838 AUROC 0.931
+  fold 1 fraction 0.3: gat_transformer n=4838 AUROC 0.928
+  fold 1 fraction 0.3: gradient_boosting n=4838 AUROC 0.918
+  fold 1 fraction 0.3: random_forest n=4838 AUROC 0.918
+  fold 1 fraction 0.3: logistic_regression n=4838 AUROC 0.911
+  fold 1 fraction 0.3: linear_svm n=4838 AUROC 0.913
+  fold 1 fraction 0.3: knn n=4838 AUROC 0.898
+  fold 1 fraction 0.5: gcn n=8062 AUROC 0.934
+  fold 1 fraction 0.5: gat n=8062 AUROC 0.931
+  fold 1 fraction 0.5: gcn_transformer n=8062 AUROC 0.935
+  fold 1 fraction 0.5: gat_transformer n=8062 AUROC 0.932
+  fold 1 fraction 0.5: gradient_boosting n=8062 AUROC 0.927
+  fold 1 fraction 0.5: random_forest n=8062 AUROC 0.925
+  fold 1 fraction 0.5: logistic_regression n=8062 AUROC 0.913
+  fold 1 fraction 0.5: linear_svm n=8062 AUROC 0.913
+  fold 1 fraction 0.5: knn n=8062 AUROC 0.908
+  fold 1 fraction 0.7: gcn n=11286 AUROC 0.935
+  fold 1 fraction 0.7: gat n=11286 AUROC 0.933
+  fold 1 fraction 0.7: gcn_transformer n=11286 AUROC 0.935
+  fold 1 fraction 0.7: gat_transformer n=11286 AUROC 0.935
+  fold 1 fraction 0.7: gradient_boosting n=11286 AUROC 0.926
+  fold 1 fraction 0.7: random_forest n=11286 AUROC 0.927
+  fold 1 fraction 0.7: logistic_regression n=11286 AUROC 0.916
+  fold 1 fraction 0.7: linear_svm n=11286 AUROC 0.917
+  fold 1 fraction 0.7: knn n=11286 AUROC 0.909
+  fold 1 fraction 1.0: gcn n=16124 AUROC 0.936
+  fold 1 fraction 1.0: gat n=16124 AUROC 0.936
+  fold 1 fraction 1.0: gcn_transformer n=16124 AUROC 0.937
+  fold 1 fraction 1.0: gat_transformer n=16124 AUROC 0.936
+  fold 1 fraction 1.0: gradient_boosting n=16124 AUROC 0.930
+  fold 1 fraction 1.0: random_forest n=16124 AUROC 0.930
+  fold 1 fraction 1.0: logistic_regression n=16124 AUROC 0.917
+  fold 1 fraction 1.0: linear_svm n=16124 AUROC 0.917
+  fold 1 fraction 1.0: knn n=16124 AUROC 0.912
+  fold 2 fraction 0.1: gcn n=1570 AUROC 0.923
+  fold 2 fraction 0.1: gat n=1570 AUROC 0.923
+  fold 2 fraction 0.1: gcn_transformer n=1570 AUROC 0.923
+  fold 2 fraction 0.1: gat_transformer n=1570 AUROC 0.920
+  fold 2 fraction 0.1: gradient_boosting n=1570 AUROC 0.911
+  fold 2 fraction 0.1: random_forest n=1570 AUROC 0.916
+  fold 2 fraction 0.1: logistic_regression n=1570 AUROC 0.908
+  fold 2 fraction 0.1: linear_svm n=1570 AUROC 0.911
+  fold 2 fraction 0.1: knn n=1570 AUROC 0.892
+  fold 2 fraction 0.2: gcn n=3138 AUROC 0.928
+  fold 2 fraction 0.2: gat n=3138 AUROC 0.929
+  fold 2 fraction 0.2: gcn_transformer n=3138 AUROC 0.929
+  fold 2 fraction 0.2: gat_transformer n=3138 AUROC 0.929
+  fold 2 fraction 0.2: gradient_boosting n=3138 AUROC 0.925
+  fold 2 fraction 0.2: random_forest n=3138 AUROC 0.926
+  fold 2 fraction 0.2: logistic_regression n=3138 AUROC 0.910
+  fold 2 fraction 0.2: linear_svm n=3138 AUROC 0.913
+  fold 2 fraction 0.2: knn n=3138 AUROC 0.903
+  fold 2 fraction 0.3: gcn n=4708 AUROC 0.933
+  fold 2 fraction 0.3: gat n=4708 AUROC 0.932
+  fold 2 fraction 0.3: gcn_transformer n=4708 AUROC 0.933
+  fold 2 fraction 0.3: gat_transformer n=4708 AUROC 0.932
+  fold 2 fraction 0.3: gradient_boosting n=4708 AUROC 0.927
+  fold 2 fraction 0.3: random_forest n=4708 AUROC 0.927
+  fold 2 fraction 0.3: logistic_regression n=4708 AUROC 0.913
+  fold 2 fraction 0.3: linear_svm n=4708 AUROC 0.914
+  fold 2 fraction 0.3: knn n=4708 AUROC 0.909
+  fold 2 fraction 0.5: gcn n=7848 AUROC 0.936
+  fold 2 fraction 0.5: gat n=7848 AUROC 0.935
+  fold 2 fraction 0.5: gcn_transformer n=7848 AUROC 0.937
+  fold 2 fraction 0.5: gat_transformer n=7848 AUROC 0.936
+  fold 2 fraction 0.5: gradient_boosting n=7848 AUROC 0.932
+  fold 2 fraction 0.5: random_forest n=7848 AUROC 0.930
+  fold 2 fraction 0.5: logistic_regression n=7848 AUROC 0.916
+  fold 2 fraction 0.5: linear_svm n=7848 AUROC 0.917
+  fold 2 fraction 0.5: knn n=7848 AUROC 0.907
+  fold 2 fraction 0.7: gcn n=10986 AUROC 0.938
+  fold 2 fraction 0.7: gat n=10986 AUROC 0.937
+  fold 2 fraction 0.7: gcn_transformer n=10986 AUROC 0.938
+  fold 2 fraction 0.7: gat_transformer n=10986 AUROC 0.937
+  fold 2 fraction 0.7: gradient_boosting n=10986 AUROC 0.934
+  fold 2 fraction 0.7: random_forest n=10986 AUROC 0.933
+  fold 2 fraction 0.7: logistic_regression n=10986 AUROC 0.916
+  fold 2 fraction 0.7: linear_svm n=10986 AUROC 0.917
+  fold 2 fraction 0.7: knn n=10986 AUROC 0.914
+  fold 2 fraction 1.0: gcn n=15694 AUROC 0.940
+  fold 2 fraction 1.0: gat n=15694 AUROC 0.941
+  fold 2 fraction 1.0: gcn_transformer n=15694 AUROC 0.941
+  fold 2 fraction 1.0: gat_transformer n=15694 AUROC 0.941
+  fold 2 fraction 1.0: gradient_boosting n=15694 AUROC 0.937
+  fold 2 fraction 1.0: random_forest n=15694 AUROC 0.937
+  fold 2 fraction 1.0: logistic_regression n=15694 AUROC 0.919
+  fold 2 fraction 1.0: linear_svm n=15694 AUROC 0.919
+  fold 2 fraction 1.0: knn n=15694 AUROC 0.917
+  fold 3 fraction 0.1: gcn n=1580 AUROC 0.935
+  fold 3 fraction 0.1: gat n=1580 AUROC 0.928
+  fold 3 fraction 0.1: gcn_transformer n=1580 AUROC 0.932
+  fold 3 fraction 0.1: gat_transformer n=1580 AUROC 0.931
+  fold 3 fraction 0.1: gradient_boosting n=1580 AUROC 0.924
+  fold 3 fraction 0.1: random_forest n=1580 AUROC 0.922
+  fold 3 fraction 0.1: logistic_regression n=1580 AUROC 0.909
+  fold 3 fraction 0.1: linear_svm n=1580 AUROC 0.913
+  fold 3 fraction 0.1: knn n=1580 AUROC 0.902
+  fold 3 fraction 0.2: gcn n=3162 AUROC 0.937
+  fold 3 fraction 0.2: gat n=3162 AUROC 0.935
+  fold 3 fraction 0.2: gcn_transformer n=3162 AUROC 0.937
+  fold 3 fraction 0.2: gat_transformer n=3162 AUROC 0.935
+  fold 3 fraction 0.2: gradient_boosting n=3162 AUROC 0.934
+  fold 3 fraction 0.2: random_forest n=3162 AUROC 0.931
+  fold 3 fraction 0.2: logistic_regression n=3162 AUROC 0.922
+  fold 3 fraction 0.2: linear_svm n=3162 AUROC 0.923
+  fold 3 fraction 0.2: knn n=3162 AUROC 0.910
+  fold 3 fraction 0.3: gcn n=4742 AUROC 0.943
+  fold 3 fraction 0.3: gat n=4742 AUROC 0.940
+  fold 3 fraction 0.3: gcn_transformer n=4742 AUROC 0.942
+  fold 3 fraction 0.3: gat_transformer n=4742 AUROC 0.939
+  fold 3 fraction 0.3: gradient_boosting n=4742 AUROC 0.935
+  fold 3 fraction 0.3: random_forest n=4742 AUROC 0.933
+  fold 3 fraction 0.3: logistic_regression n=4742 AUROC 0.925
+  fold 3 fraction 0.3: linear_svm n=4742 AUROC 0.926
+  fold 3 fraction 0.3: knn n=4742 AUROC 0.914
+  fold 3 fraction 0.5: gcn n=7904 AUROC 0.941
+  fold 3 fraction 0.5: gat n=7904 AUROC 0.939
+  fold 3 fraction 0.5: gcn_transformer n=7904 AUROC 0.942
+  fold 3 fraction 0.5: gat_transformer n=7904 AUROC 0.941
+  fold 3 fraction 0.5: gradient_boosting n=7904 AUROC 0.936
+  fold 3 fraction 0.5: random_forest n=7904 AUROC 0.935
+  fold 3 fraction 0.5: logistic_regression n=7904 AUROC 0.926
+  fold 3 fraction 0.5: linear_svm n=7904 AUROC 0.925
+  fold 3 fraction 0.5: knn n=7904 AUROC 0.920
+  fold 3 fraction 0.7: gcn n=11066 AUROC 0.943
+  fold 3 fraction 0.7: gat n=11066 AUROC 0.942
+  fold 3 fraction 0.7: gcn_transformer n=11066 AUROC 0.945
+  fold 3 fraction 0.7: gat_transformer n=11066 AUROC 0.943
+  fold 3 fraction 0.7: gradient_boosting n=11066 AUROC 0.939
+  fold 3 fraction 0.7: random_forest n=11066 AUROC 0.937
+  fold 3 fraction 0.7: logistic_regression n=11066 AUROC 0.927
+  fold 3 fraction 0.7: linear_svm n=11066 AUROC 0.928
+  fold 3 fraction 0.7: knn n=11066 AUROC 0.922
+  fold 3 fraction 1.0: gcn n=15808 AUROC 0.944
+  fold 3 fraction 1.0: gat n=15808 AUROC 0.944
+  fold 3 fraction 1.0: gcn_transformer n=15808 AUROC 0.946
+  fold 3 fraction 1.0: gat_transformer n=15808 AUROC 0.944
+  fold 3 fraction 1.0: gradient_boosting n=15808 AUROC 0.942
+  fold 3 fraction 1.0: random_forest n=15808 AUROC 0.940
+  fold 3 fraction 1.0: logistic_regression n=15808 AUROC 0.927
+  fold 3 fraction 1.0: linear_svm n=15808 AUROC 0.927
+  fold 3 fraction 1.0: knn n=15808 AUROC 0.926
+  fold 4 fraction 0.1: gcn n=1624 AUROC 0.922
+  fold 4 fraction 0.1: gat n=1624 AUROC 0.921
+  fold 4 fraction 0.1: gcn_transformer n=1624 AUROC 0.923
+  fold 4 fraction 0.1: gat_transformer n=1624 AUROC 0.920
+  fold 4 fraction 0.1: gradient_boosting n=1624 AUROC 0.913
+  fold 4 fraction 0.1: random_forest n=1624 AUROC 0.911
+  fold 4 fraction 0.1: logistic_regression n=1624 AUROC 0.907
+  fold 4 fraction 0.1: linear_svm n=1624 AUROC 0.906
+  fold 4 fraction 0.1: knn n=1624 AUROC 0.880
+  fold 4 fraction 0.2: gcn n=3246 AUROC 0.929
+  fold 4 fraction 0.2: gat n=3246 AUROC 0.927
+  fold 4 fraction 0.2: gcn_transformer n=3246 AUROC 0.930
+  fold 4 fraction 0.2: gat_transformer n=3246 AUROC 0.928
+  fold 4 fraction 0.2: gradient_boosting n=3246 AUROC 0.920
+  fold 4 fraction 0.2: random_forest n=3246 AUROC 0.918
+  fold 4 fraction 0.2: logistic_regression n=3246 AUROC 0.914
+  fold 4 fraction 0.2: linear_svm n=3246 AUROC 0.914
+  fold 4 fraction 0.2: knn n=3246 AUROC 0.899
+  fold 4 fraction 0.3: gcn n=4870 AUROC 0.932
+  fold 4 fraction 0.3: gat n=4870 AUROC 0.931
+  fold 4 fraction 0.3: gcn_transformer n=4870 AUROC 0.931
+  fold 4 fraction 0.3: gat_transformer n=4870 AUROC 0.931
+  fold 4 fraction 0.3: gradient_boosting n=4870 AUROC 0.929
+  fold 4 fraction 0.3: random_forest n=4870 AUROC 0.923
+  fold 4 fraction 0.3: logistic_regression n=4870 AUROC 0.917
+  fold 4 fraction 0.3: linear_svm n=4870 AUROC 0.918
+  fold 4 fraction 0.3: knn n=4870 AUROC 0.905
+  fold 4 fraction 0.5: gcn n=8116 AUROC 0.937
+  fold 4 fraction 0.5: gat n=8116 AUROC 0.935
+  fold 4 fraction 0.5: gcn_transformer n=8116 AUROC 0.935
+  fold 4 fraction 0.5: gat_transformer n=8116 AUROC 0.935
+  fold 4 fraction 0.5: gradient_boosting n=8116 AUROC 0.931
+  fold 4 fraction 0.5: random_forest n=8116 AUROC 0.927
+  fold 4 fraction 0.5: logistic_regression n=8116 AUROC 0.918
+  fold 4 fraction 0.5: linear_svm n=8116 AUROC 0.919
+  fold 4 fraction 0.5: knn n=8116 AUROC 0.909
+  fold 4 fraction 0.7: gcn n=11362 AUROC 0.939
+  fold 4 fraction 0.7: gat n=11362 AUROC 0.938
+  fold 4 fraction 0.7: gcn_transformer n=11362 AUROC 0.938
+  fold 4 fraction 0.7: gat_transformer n=11362 AUROC 0.939
+  fold 4 fraction 0.7: gradient_boosting n=11362 AUROC 0.933
+  fold 4 fraction 0.7: random_forest n=11362 AUROC 0.927
+  fold 4 fraction 0.7: logistic_regression n=11362 AUROC 0.920
+  fold 4 fraction 0.7: linear_svm n=11362 AUROC 0.920
+  fold 4 fraction 0.7: knn n=11362 AUROC 0.910
+  fold 4 fraction 1.0: gcn n=16232 AUROC 0.940
+  fold 4 fraction 1.0: gat n=16232 AUROC 0.939
+  fold 4 fraction 1.0: gcn_transformer n=16232 AUROC 0.940
+  fold 4 fraction 1.0: gat_transformer n=16232 AUROC 0.940
+  fold 4 fraction 1.0: gradient_boosting n=16232 AUROC 0.934
+  fold 4 fraction 1.0: random_forest n=16232 AUROC 0.930
+  fold 4 fraction 1.0: logistic_regression n=16232 AUROC 0.920
+  fold 4 fraction 1.0: linear_svm n=16232 AUROC 0.921
+  fold 4 fraction 1.0: knn n=16232 AUROC 0.910
+  fold 5 fraction 0.1: gcn n=1584 AUROC 0.923
+  fold 5 fraction 0.1: gat n=1584 AUROC 0.917
+  fold 5 fraction 0.1: gcn_transformer n=1584 AUROC 0.923
+  fold 5 fraction 0.1: gat_transformer n=1584 AUROC 0.919
+  fold 5 fraction 0.1: gradient_boosting n=1584 AUROC 0.910
+  fold 5 fraction 0.1: random_forest n=1584 AUROC 0.913
+  fold 5 fraction 0.1: logistic_regression n=1584 AUROC 0.901
+  fold 5 fraction 0.1: linear_svm n=1584 AUROC 0.899
+  fold 5 fraction 0.1: knn n=1584 AUROC 0.879
+  fold 5 fraction 0.2: gcn n=3168 AUROC 0.927
+  fold 5 fraction 0.2: gat n=3168 AUROC 0.924
+  fold 5 fraction 0.2: gcn_transformer n=3168 AUROC 0.928
+  fold 5 fraction 0.2: gat_transformer n=3168 AUROC 0.925
+  fold 5 fraction 0.2: gradient_boosting n=3168 AUROC 0.916
+  fold 5 fraction 0.2: random_forest n=3168 AUROC 0.916
+  fold 5 fraction 0.2: logistic_regression n=3168 AUROC 0.908
+  fold 5 fraction 0.2: linear_svm n=3168 AUROC 0.911
+  fold 5 fraction 0.2: knn n=3168 AUROC 0.894
+  fold 5 fraction 0.3: gcn n=4752 AUROC 0.928
+  fold 5 fraction 0.3: gat n=4752 AUROC 0.929
+  fold 5 fraction 0.3: gcn_transformer n=4752 AUROC 0.929
+  fold 5 fraction 0.3: gat_transformer n=4752 AUROC 0.929
+  fold 5 fraction 0.3: gradient_boosting n=4752 AUROC 0.921
+  fold 5 fraction 0.3: random_forest n=4752 AUROC 0.918
+  fold 5 fraction 0.3: logistic_regression n=4752 AUROC 0.912
+  fold 5 fraction 0.3: linear_svm n=4752 AUROC 0.913
+  fold 5 fraction 0.3: knn n=4752 AUROC 0.894
+  fold 5 fraction 0.5: gcn n=7920 AUROC 0.931
+  fold 5 fraction 0.5: gat n=7920 AUROC 0.931
+  fold 5 fraction 0.5: gcn_transformer n=7920 AUROC 0.933
+  fold 5 fraction 0.5: gat_transformer n=7920 AUROC 0.930
+  fold 5 fraction 0.5: gradient_boosting n=7920 AUROC 0.924
+  fold 5 fraction 0.5: random_forest n=7920 AUROC 0.924
+  fold 5 fraction 0.5: logistic_regression n=7920 AUROC 0.915
+  fold 5 fraction 0.5: linear_svm n=7920 AUROC 0.914
+  fold 5 fraction 0.5: knn n=7920 AUROC 0.906
+  fold 5 fraction 0.7: gcn n=11086 AUROC 0.934
+  fold 5 fraction 0.7: gat n=11086 AUROC 0.933
+  fold 5 fraction 0.7: gcn_transformer n=11086 AUROC 0.934
+  fold 5 fraction 0.7: gat_transformer n=11086 AUROC 0.934
+  fold 5 fraction 0.7: gradient_boosting n=11086 AUROC 0.930
+  fold 5 fraction 0.7: random_forest n=11086 AUROC 0.927
+  fold 5 fraction 0.7: logistic_regression n=11086 AUROC 0.917
+  fold 5 fraction 0.7: linear_svm n=11086 AUROC 0.916
+  fold 5 fraction 0.7: knn n=11086 AUROC 0.911
+  fold 5 fraction 1.0: gcn n=15838 AUROC 0.936
+  fold 5 fraction 1.0: gat n=15838 AUROC 0.936
+  fold 5 fraction 1.0: gcn_transformer n=15838 AUROC 0.937
+  fold 5 fraction 1.0: gat_transformer n=15838 AUROC 0.936
+  fold 5 fraction 1.0: gradient_boosting n=15838 AUROC 0.930
+  fold 5 fraction 1.0: random_forest n=15838 AUROC 0.928
+  fold 5 fraction 1.0: logistic_regression n=15838 AUROC 0.920
+  fold 5 fraction 1.0: linear_svm n=15838 AUROC 0.918
+  fold 5 fraction 1.0: knn n=15838 AUROC 0.911
+===== curves finished in 538.3 min =====
+done in 538.3 min
+
+===== plots started 2026-11-14 11:36:00 =====
+  saved figures/confusion_matrices.pdf
+  saved figures/roc_curves.pdf
+  saved figures/pr_curves.pdf
+  saved figures/training_curves.pdf
+  saved figures/tuning_results.pdf
+  saved figures/metrics_comparison.pdf
+  saved figures/learning_curves.pdf
+  saved figures/prauc_ci.pdf (+ .png)
+  saved figures/delong_heatmap.pdf (+ .png)
+===== plots finished in 0.1 min =====
+done in 0.1 min
+loaded gnn_model (seed 42)
+loaded gat_model (seed 42)
+loaded gcn_transformer_model (seed 42)
+loaded gat_transformer_model (seed 42)
+explaining 50 random test compounds (25 active), 159 descriptors
+
+===== run_gnnexplainer started 2026-11-14 11:36:11 =====
+Saved feature-importance figure to ./figures/gnnexplainer_atomic_vs_molecular.pdf
+===== run_gnnexplainer finished in 1.2 min =====
+
+===== run_integrated_gradients started 2026-11-14 11:37:24 =====
+Saved feature-importance figure to ./figures/integrated_gradients_atomic_vs_molecular.pdf
+===== run_integrated_gradients finished in 0.1 min =====
+
+===== run_feature_ablation started 2026-11-14 11:37:29 =====
+Saved feature-importance figure to ./figures/feature_ablation_atomic_vs_molecular.pdf
+===== run_feature_ablation finished in 0.1 min =====
+
+===== run_saliency started 2026-11-14 11:37:36 =====
+Saved feature-importance figure to ./figures/saliency_atomic_vs_molecular.pdf
+===== run_saliency finished in 0.0 min =====
+
+===== run_shap started 2026-11-14 11:37:37 =====
+Saved feature-importance figure to ./figures/shap_atomic_vs_molecular.pdf
+===== run_shap finished in 4.2 min =====
+
+===== run_agreement started 2026-11-14 11:41:47 =====
+          spearman               top_k_overlap          
+              mean    min    max          mean  min  max
+branch                                                  
+Atomic       0.188 -0.789  0.913          0.32  0.0  1.0
+Molecular    0.398 -0.002  0.905          0.39  0.0  0.8
+  saved figures/explainability_agreement.pdf
+===== run_agreement finished in 0.0 min =====
+
+===== run_deletion_check started 2026-11-14 11:41:48 =====
+              method  k  mean_abs_change_top_k  mean_abs_change_random_k  random_sd
+        GNNExplainer  5                 0.1111                    0.0711     0.0116
+        GNNExplainer 10                 0.1218                    0.0731     0.0092
+        GNNExplainer 20                 0.1509                    0.0795     0.0156
+Integrated Gradients  5                 0.0871                    0.0703     0.0102
+Integrated Gradients 10                 0.1090                    0.0750     0.0151
+Integrated Gradients 20                 0.1380                    0.0844     0.0179
+    Feature Ablation  5                 0.0676                    0.0690     0.0110
+    Feature Ablation 10                 0.1003                    0.0720     0.0114
+    Feature Ablation 20                 0.1528                    0.0815     0.0158
+            Saliency  5                 0.0941                    0.0665     0.0094
+            Saliency 10                 0.0901                    0.0733     0.0091
+            Saliency 20                 0.1387                    0.0817     0.0162
+                SHAP  5                 0.1244                    0.0689     0.0075
+                SHAP 10                 0.1254                    0.0766     0.0123
+                SHAP 20                 0.1540                    0.0815     0.0144
+===== run_deletion_check finished in 0.2 min =====
+
+eda/dataset_summary
+
+tuning/hyperparameter_table
+
+cross_validation/cv_mean_std_table
+
+test_results/test_set_metrics_table
+
+test_results/bootstrap_ci_table
+
+test_results/seed_repeat_table
+
+explainability/explainability_agreement
+
+explainability/explainability_deletion_check
+  saved figures/prauc_ci.pdf (+ .png)
+  saved figures/delong_heatmap.pdf (+ .png)
+  saved figures/prauc_ci.pdf (+ .png)
+  saved figures/delong_heatmap.pdf (+ .png)
+
+===== plots started 2026-11-14 18:25:50 =====
+  saved figures/confusion_matrices.pdf
+  saved figures/roc_curves.pdf
+  saved figures/pr_curves.pdf
+  saved figures/training_curves.pdf
+  saved figures/tuning_results.pdf
+  saved figures/metrics_comparison.pdf
+  saved figures/learning_curves.pdf
+  saved figures/prauc_ci.pdf (+ .png)
+  saved figures/delong_heatmap.pdf (+ .png)
+===== plots finished in 0.1 min =====
+done in 0.1 min
+
+===== run_gnnexplainer started 2026-11-14 18:39:06 =====
+Saved feature-importance figure to ./figures/gnnexplainer_atomic_vs_molecular.pdf
+===== run_gnnexplainer finished in 1.3 min =====
+
+===== run_gnnexplainer started 2026-11-14 18:44:59 =====
+Saved feature-importance figure to ./figures/gnnexplainer_atomic_vs_molecular.pdf
+===== run_gnnexplainer finished in 1.2 min =====
+
+===== run_gnnexplainer started 2026-11-14 18:48:46 =====
+Saved feature-importance figure to ./figures/gnnexplainer_atomic_vs_molecular.pdf
+===== run_gnnexplainer finished in 1.1 min =====
+
+===== run_integrated_gradients started 2026-11-14 18:50:30 =====
+Saved feature-importance figure to ./figures/integrated_gradients_atomic_vs_molecular.pdf
+===== run_integrated_gradients finished in 0.1 min =====
+
+===== run_feature_ablation started 2026-11-14 18:50:35 =====
+Saved feature-importance figure to ./figures/feature_ablation_atomic_vs_molecular.pdf
+===== run_feature_ablation finished in 0.1 min =====
+
+===== run_saliency started 2026-11-14 18:50:42 =====
+Saved feature-importance figure to ./figures/saliency_atomic_vs_molecular.pdf
+===== run_saliency finished in 0.0 min =====
+
+===== run_shap started 2026-11-14 18:50:45 =====
+Saved feature-importance figure to ./figures/shap_atomic_vs_molecular.pdf
+===== run_shap finished in 4.1 min =====
+
+===== run_agreement started 2026-11-14 18:54:53 =====
+          spearman               top_k_overlap          
+              mean    min    max          mean  min  max
+branch                                                  
+Atomic       0.209 -0.801  0.850          0.34  0.0  0.8
+Molecular    0.382  0.078  0.909          0.45  0.2  0.8
+  saved figures/explainability_agreement.pdf
+===== run_agreement finished in 0.0 min =====
+missing: outputs/test_results/integrated_gradients_importance.csv
+missing: outputs/test_results/saliency_importance.csv
+missing: outputs/test_results/shap_importance.csv
+reading from: /Users/chigozie/Downloads/antimalarial_gnn_2/explainability
+   branch             method_a method_b  spearman
+   Atomic Integrated Gradients Saliency    -0.566
+   Atomic Integrated Gradients     SHAP     0.850
+   Atomic                 SHAP Saliency    -0.238
+Molecular Integrated Gradients Saliency     0.334
+Molecular Integrated Gradients     SHAP     0.771
+Molecular                 SHAP Saliency     0.431
+saved to: /Users/chigozie/Downloads/antimalarial_gnn_2/figures
+reading from: /Users/chigozie/Downloads/antimalarial_gnn_2/explainability
+   branch             method_a method_b  spearman
+   Atomic Integrated Gradients Saliency    -0.566
+   Atomic Integrated Gradients     SHAP     0.850
+   Atomic                 SHAP Saliency    -0.238
+Molecular Integrated Gradients Saliency     0.334
+Molecular Integrated Gradients     SHAP     0.771
+Molecular                 SHAP Saliency     0.431
+saved to: /Users/chigozie/Downloads/antimalarial_gnn_2/figures
+reading from: /Users/chigozie/Downloads/antimalarial_gnn_2
+
+== Data split
+   Outer scaffold split: test fraction: 0.2
+   Inner validation fraction (final fit): 0.15
+   Scaffold CV folds: 5
+   Random seed (split): 42
+   Descriptor correlation threshold: 0.85
+   Undersampling: 1:1 on training data only, redrawn every epoch
+
+== Training
+   Optimiser: AdamW
+   LR scheduler: ReduceLROnPlateau (mode=max on validation AUROC, factor 0.5, patience 5)
+   Batch size (train): 128
+   Batch size (evaluation): 2048
+   Gradient clipping (max norm): 5.0
+   Attention heads (GAT/Transformer): 8
+   Categorical atom embeddings: True
+   Mixed precision: False
+   Final training: max epochs: 200
+   Final training: early-stopping patience (val AUROC): 30
+   Final training seeds: [42, 43, 44]
+   Reported predictions: mean over seeds (ensemble)
+
+== Tuning
+   Search type: random search + successive halving
+   Configurations sampled (per GNN): 20
+   Screen: epochs on fold 1: 20
+   Configurations kept for all folds: 5
+   CV: max epochs / patience: 50 / 10
+
+== Search space
+   hidden: [64, 128, 256]
+   dropout: [0.1, 0.2, 0.3]
+   layers: [2, 3, 4]
+   lr: [0.001, 0.0005, 0.0001]
+   weight_decay: [1e-05, 0.0001, 0.0005]
+   pool: ['mean', 'mean_max']
+
+== Evaluation
+   Bootstrap resamples: 1000
+
+== Explainability
+   Compounds explained: 50
+   Integrated Gradients steps: 50
+   SHAP nsamples: auto
+
+== Software
+   Device: cpu
+   torch: 2.2.0
+   torch_geometric: 2.6.1
+   rdkit: 2022.09.5
+   sklearn: 1.6.1
+   numpy: 1.26.4
+   pandas: 2.3.3
+
+== Selected: GCN
+   hidden: 256
+   dropout: 0.1
+   layers: 4
+   lr: 0.0001
+   weight_decay: 0.0005
+   pool: mean_max
+
+== Selected: GAT
+   hidden: 256
+   dropout: 0.3
+   layers: 3
+   lr: 0.0005
+   weight_decay: 1e-05
+   pool: mean
+
+== Selected: GCN-Transformer
+   hidden: 256
+   dropout: 0.1
+   layers: 4
+   lr: 0.0001
+   weight_decay: 0.0005
+   pool: mean_max
+
+== Selected: GAT-Transformer
+   hidden: 256
+   dropout: 0.3
+   layers: 3
+   lr: 0.0005
+   weight_decay: 1e-05
+   pool: mean
+
+== Epochs: GAT
+   Epochs run (mean, min-max): 55 (52-59)
+   Best epoch (mean, min-max): 25 (22-29)
+   Runs stopped early: 3 of 3
+
+== Epochs: GAT-Transformer
+   Epochs run (mean, min-max): 62 (44-72)
+   Best epoch (mean, min-max): 32 (14-42)
+   Runs stopped early: 3 of 3
+
+== Epochs: GCN
+   Epochs run (mean, min-max): 58 (50-64)
+   Best epoch (mean, min-max): 28 (20-34)
+   Runs stopped early: 3 of 3
+
+== Epochs: GCN-Transformer
+   Epochs run (mean, min-max): 51 (50-54)
+   Best epoch (mean, min-max): 21 (20-24)
+   Runs stopped early: 3 of 3
+
+== Model size: GCN
+   Trainable parameters (approx.): 489,485
+   Molecular descriptors kept: 159
+
+== Model size: GAT
+   Trainable parameters (approx.): 358,668
+   Molecular descriptors kept: 159
+
+== Model size: GCN-Transformer
+   Trainable parameters (approx.): 950,537
+   Molecular descriptors kept: 159
+
+== Model size: GAT-Transformer
+   Trainable parameters (approx.): 624,137
+   Molecular descriptors kept: 159
+
+== Baseline: Random Forest
+   n_estimators: 100
+   max_depth: None (library default)
+   min_samples_split: 2
+   min_samples_leaf: 1
+   max_features: sqrt
+   class_weight: None (library default)
+   random_state: 42
+
+== Baseline: Gradient Boosting
+   learning_rate: 0.1
+   max_iter: 100
+   max_depth: None (library default)
+   max_leaf_nodes: 31
+   l2_regularization: 0.0
+   early_stopping: auto
+   random_state: 42
+
+== Baseline: Logistic Regression
+   penalty: l2
+   C: 1.0
+   solver: lbfgs
+   max_iter: 2000
+   class_weight: None (library default)
+
+== Baseline: Linear SVM
+   method: sigmoid
+   cv: 3
+   LinearSVC: C / loss / max_iter: 1.0 / squared_hinge / 5000
+
+== Baseline: k-NN
+   n_neighbors: 15
+   weights: uniform
+   metric: minkowski
+
+== Baseline: all
+   Tuning: none (library defaults, listed above); trained on the same 1:1 undersampled training data
+
+saved: tuning/training_settings.csv

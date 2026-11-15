@@ -1,0 +1,13 @@
+model,seed,epochs_run,best_epoch,stopped_early,best_val_auc,final_lr
+GAT,42,52,22,True,0.9372,1.5625e-05
+GAT,43,54,24,True,0.938,3.125e-05
+GAT,44,59,29,True,0.9362,3.125e-05
+GAT-Transformer,42,71,41,True,0.9386,1.5625e-05
+GAT-Transformer,43,44,14,True,0.9371,3.125e-05
+GAT-Transformer,44,72,42,True,0.9384,7.8125e-06
+GCN,42,64,34,True,0.9359,1.5625e-06
+GCN,43,50,20,True,0.935,3.125e-06
+GCN,44,61,31,True,0.9368,3.125e-06
+GCN-Transformer,42,54,24,True,0.9364,1.5625e-06
+GCN-Transformer,43,50,20,True,0.9376,6.25e-06
+GCN-Transformer,44,50,20,True,0.9371,6.25e-06

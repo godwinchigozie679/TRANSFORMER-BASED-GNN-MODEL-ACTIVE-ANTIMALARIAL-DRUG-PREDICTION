@@ -1,116 +1,103 @@
-"""
-80/20 train/test split, then 5-fold CV inside the 80% for tuning, then
-one final model on the full 80%, tested once on the 20% at the end.
-
-Test set stays out of tuning entirely - outer_split() sets it aside and
-train_with_best_params() is the only thing that touches it, right at
-the end.
-
-Small grid on purpose, not trying to be exhaustive.
-"""
-
+"""Stage 2 (tune): random search with five-fold scaffold cross-validation on the development set only."""
 import itertools
 import json
 import os
+import random
+import time
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
 
-from data_prep import cross_validation_splits, prepare_split, outer_split
-from graphs import build_graph_dataset
-from train import train_model, evaluate_model
-from config import TRAIN_CONFIG
-
-PARAM_GRID = {
-    'hidden_dim': [64, 128],
-    'dropout': [0.2, 0.4],
-    'num_layers': [2, 4],  # want to know if fewer layers actually generalizes better
-}
+from config import BASELINES, CFG, DISPLAY, GRID, KINDS, METRIC_COLS, logged, path, pkl_key
+from data_prep import Ctx
+from descriptors import FoldData
+from train import fit_baseline, fit_gnn, metrics
 
 
-def _param_combos(param_grid):
-    keys = list(param_grid.keys())
-    for values in itertools.product(*param_grid.values()):
-        yield dict(zip(keys, values))
+def sample_configs():
+    keys = list(GRID)
+    space = list(itertools.product(*[GRID[k] for k in keys]))
+    rng = random.Random(CFG["seed"])
+    chosen = rng.sample(space, min(CFG["n_configs"], len(space)))
+    return [dict(zip(keys, c)) for c in chosen]
 
 
-def tune_hyperparameters(model_class, outer_train_df, n_folds=3, seed=42,
-                          param_grid=None, tuning_epochs=25, tuning_patience=6, verbose=True):
-    """CV inside outer_train_df only, never touches the test set.
-    Fewer epochs than the real run since we're just comparing combos.
+@logged
+def tune():
+    ctx = Ctx()
+    configs = sample_configs()
+    runs_path = path("tuning_runs.csv")
+    runs = pd.read_csv(runs_path) if os.path.exists(runs_path) else pd.DataFrame()
+    folds = {}
 
-    Returns results_df sorted best-first and best_params."""
-    param_grid = param_grid or PARAM_GRID
-    rows = []
+    def fold(k):
+        if k not in folds:
+            tr, va = ctx.cv[k]
+            folds[k] = FoldData(ctx, tr, va, CFG["seed"] + k)
+        return folds[k]
 
-    for combo in _param_combos(param_grid):
-        fold_aucs = []
-        for fold_idx, train_df, val_df, descriptor_cols, _ in cross_validation_splits(outer_train_df, n_folds, seed):
-            train_graphs = build_graph_dataset(train_df, descriptor_cols)
-            val_graphs = build_graph_dataset(val_df, descriptor_cols)
+    def done(kind, cid, k):
+        return len(runs) and ((runs["model"] == kind) & (runs["cfg_id"] == cid) & (runs["fold"] == k)).any()
 
-            model = model_class(**combo)
-            tune_config = {**TRAIN_CONFIG, 'epochs': tuning_epochs, 'early_stop_patience': tuning_patience}
-            _, _, best_val_auc = train_model(model, train_graphs, val_graphs, config=tune_config, verbose=False)
-            fold_aucs.append(best_val_auc)
+    def run(kind, cid, k, screen=False):
+        """screen=True: short run on the first fold, recorded as fold -1 (used only to pick finalists)."""
+        nonlocal runs
+        rec = -1 if screen else k
+        if done(kind, cid, rec):
+            return float(runs[(runs["model"] == kind) & (runs["cfg_id"] == cid) & (runs["fold"] == rec)]["auc"].iloc[0])
+        t0 = time.time()
+        fd = fold(0 if screen else k)
+        _, auc, ep, p = fit_gnn(ctx, fd, kind, configs[cid], CFG["screen_epochs"] if screen else CFG["tune_epochs"],
+                                CFG["tune_patience"], CFG["seed"] + (0 if screen else k))
+        row = dict(model=kind, cfg_id=cid, fold=rec, epochs=ep, seconds=round(time.time() - t0, 1),
+                   **{f"p_{a}": b for a, b in configs[cid].items()}, **metrics(ctx.y[fd.val], p))
+        runs = pd.concat([runs, pd.DataFrame([row])], ignore_index=True)
+        runs.to_csv(runs_path, index=False)                     # saved after every run, so a stop can resume
+        print(f"  {kind} cfg {cid} fold {k}: AUROC {auc:.4f} ({ep} epochs, {row['seconds']}s)", flush=True)
+        return auc
 
-        row = {**combo, 'mean_val_auc': float(np.mean(fold_aucs)), 'std_val_auc': float(np.std(fold_aucs))}
-        rows.append(row)
-        if verbose:
-            print(f"  {combo}: mean val auc {row['mean_val_auc']:.3f} +/- {row['std_val_auc']:.3f}")
+    best = {}
+    for kind in KINDS:
+        print(f"tuning {kind}")
+        n_cfg, keep = len(configs), CFG["halving_keep"]
+        if keep and keep < n_cfg:
+            first = {cid: run(kind, cid, 0, screen=True) for cid in range(n_cfg)}   # short screen, first fold
+            finalists = sorted(first, key=first.get, reverse=True)[:keep]
+        else:
+            finalists = list(range(n_cfg))
+        mean, std = {}, {}
+        for cid in finalists:
+            sc_ = [run(kind, cid, k) for k in range(CFG["n_folds"])]
+            mean[cid], std[cid] = float(np.mean(sc_)), float(np.std(sc_))
+        pd.DataFrame([dict(**configs[c], mean_val_auc=mean[c], std_val_auc=std[c]) for c in finalists]).to_csv(
+            path(f"{pkl_key(kind)}_tuning_results.csv"), index=False)   # candidates that reached full CV
+        cid = max(mean, key=mean.get)
+        scores = [run(kind, cid, k) for k in range(CFG["n_folds"])]
+        best[kind] = dict(cfg_id=cid, mean_val_auc=float(np.mean(scores)), std_val_auc=float(np.std(scores)),
+                          **configs[cid])
+        print(f"  best {kind}: {configs[cid]}  CV AUROC {np.mean(scores):.4f} +/- {np.std(scores):.4f}")
+    with open(path("best_params.json"), "w") as f:
+        json.dump(best, f, indent=2)
 
-    results_df = pd.DataFrame(rows).sort_values('mean_val_auc', ascending=False).reset_index(drop=True)
-
-    best_row = results_df.iloc[0]
-    best_params = {}
-    for key in param_grid.keys():
-        value = best_row[key]
-        # pandas upcasts to float when mixed with the auc columns, cast back
-        best_params[key] = int(value) if isinstance(param_grid[key][0], int) else float(value)
-
-    return results_df, best_params
-
-
-def prepare_final_split(outer_train_df, outer_test_df, seed=42):
-    """Same split train_with_best_params uses internally. Pulled out on
-    its own so anything reloading a checkpoint later can rebuild the
-    same descriptor_cols it was trained with. Change 0.15 here, change
-    it there too."""
-    inner_train_df, inner_val_df = train_test_split(
-        outer_train_df, test_size=0.15, stratify=outer_train_df['Labels'], random_state=seed
-    )
-    return prepare_split(
-        inner_train_df.reset_index(drop=True), inner_val_df.reset_index(drop=True), outer_test_df, seed
-    )
-
-
-def train_with_best_params(model_class, best_params, outer_train_df, outer_test_df,
-                            seed=42, save_as=None, config_overrides=None, model_dir='trained_models'):
-    """Final fit on the full 80%, one eval on the 20%. This is the
-    number to report, not anything from tuning above.
-
-    Saves best_params alongside the checkpoint if save_as is set -
-    needed later to rebuild the model with the right shapes before
-    load_state_dict."""
-    train_df, val_df, test_df, descriptor_cols, _ = prepare_final_split(outer_train_df, outer_test_df, seed)
-
-    train_graphs = build_graph_dataset(train_df, descriptor_cols)
-    val_graphs = build_graph_dataset(val_df, descriptor_cols)
-    test_graphs = build_graph_dataset(test_df, descriptor_cols)
-
-    model = model_class(**best_params)
-    train_config = {**TRAIN_CONFIG, **(config_overrides or {})}
-    model, history, best_val_auc = train_model(model, train_graphs, val_graphs, config=train_config, save_as=save_as)
-
-    if save_as:
-        os.makedirs(model_dir, exist_ok=True)
-        params_path = os.path.join(model_dir, f'{save_as}_best_params.json')
-        with open(params_path, 'w') as f:
-            json.dump(best_params, f)
-        print(f"saved best_params to {params_path}")
-
-    model_device = next(model.parameters()).device
-    result = evaluate_model(model, test_graphs, device=model_device)
-
-    return model, history, result
+    rows = []                                                  # tuned cross-validation metrics, per fold
+    for kind in KINDS:
+        sub = runs[(runs["model"] == kind) & (runs["cfg_id"] == best[kind]["cfg_id"]) & (runs["fold"] >= 0)]
+        rows += [dict(model=kind, fold=int(r.fold), **{m: getattr(r, m) for m in METRIC_COLS}) for r in sub.itertuples()]
+    for key in BASELINES:
+        print(f"cross-validating {key}")
+        for k in range(CFG["n_folds"]):
+            _, p = fit_baseline(ctx, fold(k), key, CFG["seed"] + k)
+            rows.append(dict(model=key, fold=k, **{m: metrics(ctx.y[fold(k).val], p)[m] for m in METRIC_COLS}))
+    cvdf = pd.DataFrame(rows)
+    cvdf.to_csv(path("cv_folds.csv"), index=False)
+    table = []
+    for key in KINDS + BASELINES:
+        sub = cvdf[cvdf["model"] == key]
+        table.append({"model": key, **{m: f"{sub[m].mean():.3f} ± {sub[m].std(ddof=1):.3f}" for m in METRIC_COLS}})
+    pd.DataFrame(table).to_csv(path("cv_mean_std_table.csv"), index=False)
+    print(pd.DataFrame(table).to_string(index=False))
+    hp = pd.DataFrame([{"Model": DISPLAY[k], "Hidden size": v["hidden"], "Layers": v["layers"],
+                        "Dropout": v["dropout"], "Learning rate": v["lr"], "Weight decay": v["weight_decay"],
+                        "Pooling": v["pool"], "CV AUROC": f"{v['mean_val_auc']:.3f} ± {v['std_val_auc']:.3f}"}
+                       for k, v in best.items()])
+    hp.to_csv(path("hyperparameter_table.csv"), index=False)

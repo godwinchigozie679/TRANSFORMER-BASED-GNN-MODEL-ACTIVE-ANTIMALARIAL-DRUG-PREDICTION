@@ -1,0 +1,21 @@
+branch,method_a,method_b,spearman,top_k,top_k_overlap
+Atomic,GNNExplainer,Integrated Gradients,0.8418320610687023,5,0.4
+Atomic,GNNExplainer,Saliency,-0.8007937812730828,5,0.0
+Atomic,GNNExplainer,SHAP,0.605403762205308,5,0.4
+Atomic,Integrated Gradients,Saliency,-0.5657151645821663,5,0.0
+Atomic,Integrated Gradients,SHAP,0.8496412860400264,5,0.8
+Atomic,Feature Ablation,GNNExplainer,0.2482063835970325,5,0.4
+Atomic,Feature Ablation,Integrated Gradients,0.4747366869537338,5,0.6
+Atomic,Feature Ablation,Saliency,0.033577533577533576,5,0.2
+Atomic,Feature Ablation,SHAP,0.6440781440781441,5,0.6
+Atomic,SHAP,Saliency,-0.23809523809523808,5,0.0
+Molecular,GNNExplainer,Integrated Gradients,0.908526391210891,10,0.7
+Molecular,GNNExplainer,Saliency,0.2521883209935515,10,0.4
+Molecular,GNNExplainer,SHAP,0.6962441230481577,10,0.7
+Molecular,Integrated Gradients,Saliency,0.334398137090996,10,0.5
+Molecular,Integrated Gradients,SHAP,0.7710220118186045,10,0.8
+Molecular,Feature Ablation,GNNExplainer,0.07811380463338906,10,0.2
+Molecular,Feature Ablation,Integrated Gradients,0.13275017912586579,10,0.3
+Molecular,Feature Ablation,Saliency,0.09739968951516599,10,0.2
+Molecular,Feature Ablation,SHAP,0.11692149216852102,10,0.2
+Molecular,SHAP,Saliency,0.43051876004079126,10,0.5

@@ -1,0 +1,87 @@
+{
+  "time": "2026-11-13T22:59:30",
+  "device": "cpu",
+  "versions": {
+    "torch": "2.2.0",
+    "torch_geometric": "2.6.1",
+    "rdkit": "2022.09.5",
+    "sklearn": "1.6.1",
+    "numpy": "1.26.4",
+    "pandas": "2.3.3"
+  },
+  "config": {
+    "data_path": "main_data_2/Drug_activity.csv",
+    "smiles_col": "Smiles",
+    "label_col": "Labels",
+    "out_dir": ".",
+    "seed": 42,
+    "test_frac": 0.2,
+    "inner_val_frac": 0.15,
+    "n_folds": 5,
+    "corr_threshold": 0.85,
+    "n_configs": 20,
+    "halving_keep": 5,
+    "tune_epochs": 50,
+    "tune_patience": 10,
+    "screen_epochs": 20,
+    "final_epochs": 200,
+    "final_patience": 30,
+    "batch_size": 128,
+    "eval_batch_size": 2048,
+    "heads": 8,
+    "n_boot": 1000,
+    "knn_k": 15,
+    "workers": 0,
+    "explain_n": 50,
+    "shap_nsamples": "auto",
+    "ig_steps": 50,
+    "gnnexplainer_epochs": 200,
+    "gnnexplainer_desc_epochs": 100,
+    "curve_folds": 5,
+    "resample_each_epoch": true,
+    "embed_categorical": true,
+    "ensemble": true,
+    "grad_clip": 5.0,
+    "amp": false,
+    "graph_path": "main_data_2/molecule_graphs.pt",
+    "desc_path": "main_data_2/enhanced_drug_data_with_descriptors.csv",
+    "build_missing": false,
+    "limit": null
+  },
+  "grid": {
+    "hidden": [
+      64,
+      128,
+      256
+    ],
+    "dropout": [
+      0.1,
+      0.2,
+      0.3
+    ],
+    "layers": [
+      2,
+      3,
+      4
+    ],
+    "lr": [
+      0.001,
+      0.0005,
+      0.0001
+    ],
+    "weight_decay": [
+      1e-05,
+      0.0001,
+      0.0005
+    ],
+    "pool": [
+      "mean",
+      "mean_max"
+    ]
+  },
+  "seeds": [
+    42,
+    43,
+    44
+  ]
+}

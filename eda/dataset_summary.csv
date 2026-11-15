@@ -1,0 +1,4 @@
+subset,compounds,active,inactive,active_pct
+Full dataset,123745,12685,111060,10.25
+Development set,98995,9962,89033,10.06
+Test set,24750,2723,22027,11.0
