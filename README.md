@@ -56,7 +56,7 @@ The explanations are post-hoc hypotheses about what the model uses; they are not
 | `train_final.py` | stage 3 `final()` |
 | `evaluate.py` | stage 4 `report()` |
 | `curves.py` | stage 5 `curves()` (learning curves, 5-fold CV, all nine models) |
-| `plots.py` | stage 6 `plots()` (figures, original publication style) |
+| `plots.py` | stage 6 `plots()` (figures) |
 | `explain.py` | stage 7: the five explainability methods, agreement, deletion check |
 | `run.py` | command line |
 | `make_table.py`, `make_cv_table.py` | LaTeX tables from `test_results/` and `cross_validation/` CSVs (write `test_results/table_*.tex`) |
